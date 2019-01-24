@@ -1,0 +1,880 @@
+---
+title: "Basic Linear Regression Models"
+author: "Robert I. Colautti"
+output: html_document
+---
+
+# Data
+
+In this tutorial, we'll be using data from a meta-analysis by Colautti & Lau (2015) in Molecular Ecology. [Paper Link](https://onlinelibrary.wiley.com/doi/abs/10.1111/mec.13162)
+
+Data from the paper are available on the Dryad database: https://doi.org/10.5061/dryad.gt678
+
+Data from several analyses are available. We'll be analyzing data from Figure 1, which is a meta-analysis of plant traits.
+
+```{r,eval=F}
+TraitDat<-read.csv("https://datadryad.org/bitstream/handle/10255/dryad.82837/MetaPCA_Data.csv?sequence=1")
+
+# Save a local copy for future analysis
+write.csv(TraitDat,"TraitDat.csv",row.names=F)
+```
+
+```{r,echo=F}
+TraitDat<-read.csv("TraitDat.csv")
+```
+
+
+```{r}
+str(TraitDat)
+```
+
+Data for the meta-analysis are from common garden experiments. As detailed in the paper, common garden experiments grow plants from different genetic groups (e.g. seed family, population) in the same environment to look for genetic differences. In this study, we were interested in comparing native and introduced populations.
+
+1. **Reference** is the paper from which the original data were taken
+2. **Species** is the species on which the traits were measured
+3. **Trait** is the trait measured (actually a class of related traits, see PC1SD)
+4. **Garden** is a code for the common garden used
+5. **Range** indicates whether the population value is calculated among native (N) or introduced (I) populations
+6. **PC1SD** this is the variance among population means -- a measure of genetic variation for the **Trait** specified in column 3. This is actually the first principal component of a number of related traits. Principal components analysis is covered in another tutorial.
+7. **LatSD** is the variance among population latitudes -- a measure of geographic distribution of the genotypes
+
+# Theory
+
+A simple linear model describes a relationship between one or more **predictor** (a.k.a. **independent**) variables and a **response** (a.k.a. **dependent**) variable. In mathematical terms:
+
+$$ Y \sim f(X) + \epsilon $$
+
+where $Y$ is a *vector* containing the *response* variable and $f(X)$ is a linear combination one or more *vectors* representing the *predictor* variables. The 'epsilon' character ($\epsilon$)  is the 'error' of the model -- that is, variation in $Y$ that is not explained by $f(X)$. For example, with two predictors $X_1$ and $X_2$, a simple linear function is:
+
+$$Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \epsilon$$
+
+# Simulations
+
+A good way to understand this model is to simulate data. Start by making vectors of random values for each predictor variable $X$. In this case, we'll make one continuous variable $X_c$ and one factoral variable $X_f$.
+
+```{r}
+X_c<-rnorm(1000)
+X_f<-sample(c(0,1),1000,replace=T)
+```
+
+Note that we have encoded $X_f$ numerically as 0 and 1. We'll come back to this point later when we look at the `lm` function. 
+If it's not obvious from the code, you can use `qplot()` from the `ggplot2` library to investigate the distributions of the independent variables:
+
+```{r,echo=F}
+source("theme_pub.R")
+library(ggplot2); theme_set(theme_pub())
+```
+
+
+```{r,message=F}
+qplot(X_c)
+qplot(X_f,X_c, alpha=I(0.03))
+```
+
+Next, we add the error term $\epsilon$ to model the variation in $Y$ that is not explained by $X_f$ or $X_c$. Let's assume that error variance is normally distributed with a mean of zero and standard deviation of 1:
+
+```{r}
+Error<-rnorm(1000)
+```
+
+Finally, we make the response variable $Y$ as a linear function $f(X)$ of $X_c$ and $X_f$ and the error term $\epsilon$. In this example, $\beta_0 = 500$ , $\beta_1 = 10$ , and $\beta_2 = 2$:
+
+```{r}
+Y<-500 + 10*X_c + 2*X_f + Error
+```
+
+and plot:
+
+```{r}
+qplot(as.factor(X_f),Y,geom="boxplot")
+qplot(X_c,Y)
+```
+
+# Questions/Hypotheses
+
+Using this framework, we can ask general questions like:
+
+1. Is there a relationship between Y and X?
+2. How strong is the relationship (e.g. what is the slope)?
+3. Is the relationship linear or non-linear?
+4. Are there synergistic or antagonistic effects among different predictor variables (i.e. X vectors)?
+5. How accurately can we estimate the effect of X on Y?
+6. How accurately can we predict Y given X?
+
+These can be translated to testable hypotheses/predictions. In the meta-analysis data, we might translate these to:
+
+  * **H1**: Species with broader geographic distribution (LatSD) maintain more genetic variation for heritable traits (PC1SD).
+  * **H2**: Genetic variation (PC1SD) is lower among native compared to introduced populations.
+  * **H3**: There is a saturating effect of LatSD on PC1SD (i.e. non-linear relationship).
+  * **H4**: LatSD has a stronger effect on PC1SD in native populations, compared to introduced populations.
+
+We can also estimate error associated with the model:
+
+  * How accurately can we estimate the effect of LatSD on PC1SD?
+  * How accurately can we predict PC1SD?
+
+# Coefficients
+
+A simple *linear regression* by ordinary least squares (OLS) for two variables is estimated by the correlation coefficient:
+
+$$b_1 = \frac{\sum_{i=1}^{n}(x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^{n}(x_i - \bar x)}$$
+
+which is equivalent to:
+
+$$b_1 = \frac{COV_{xy}}{V_x}$$
+
+with intercept:
+
+$$b_0 = \bar y - b_1 \bar x $$
+
+## Coefficients calculation
+
+### Simulated Data
+
+Calculating $b_0$ and $b_1$ from the simulated data to derive the estimated equation $Y ~ b_0 + b_1 X_c$ 
+
+```{r}
+b1<-round(cov(Y,X_c)/var(X_c),3)
+b0<-round(mean(Y)-b1*mean(X_c),3)
+paste("Y ~",b0,"+",b1,"* X_c")
+```
+
+Compare to our original equation:
+
+```{r, eval=F}
+Y<-500 + 10*X_c + 0*X_f + Error
+```
+
+### Meta-analysis Data
+```{r}
+b1<-cov(TraitDat$PC1SD,TraitDat$LatSD)/var(TraitDat$LatSD)
+b0<-mean(TraitDat$PC1SD)-b1*mean(TraitDat$LatSD)
+paste("Y ~",b0,"+",b1,"* X_c")
+```
+
+# Model Fit
+
+## 'Unbiased' estimate
+
+We can estimate the error associated with our model if we assume data were sampled randomly and 'unbiased'. Unbiased means that replicated experiments may over- or under-estimate the model parameters, but the overall average among experimental estimates would converge on the 'true' parameters. This is relatively easy to see in simulated data.
+
+First, create a function based on our simulated data, above:
+
+```{r}
+SimDat<-function(N=1000,B0=500,B1=10,B2=0,Error=rnorm(N)){
+  X_c<-rnorm(N)
+  X_f<-sample(c(0,1),N,replace=T)
+  Y<-B0 + B1*X_c + B2*X_f + Error
+  b1<-cov(Y,X_c)/var(X_c)
+  b0<-mean(Y)-b1*mean(X_c)
+  return(round(c(b0,b1),3))
+}
+```
+
+Each run of this function simulates a separate, independent experiment:
+
+```{r}
+B0<-500
+B1<-10
+for (i in 1:10){
+  X<-SimDat(B0=B0,B1=B1)
+  print(paste("Y ~",X[1],"+",X[2],"* X_c"))
+  X<-NA
+}
+```
+
+In general values seem to fluctuate around the 'true' estimates. Increasing the number of simulations:
+
+```{r}
+X<-data.frame(b0=rep(NA,1000),b1=rep(NA,1000))
+for(i in 1:1000){
+  X[i,]<-SimDat(B0=B0,B1=B1)
+}
+qplot(b0,data=X)+geom_vline(xintercept=B0,colour="red")
+qplot(b1,data=X)+geom_vline(xintercept=B1,colour="red")
+```
+
+What is the mean and standard deviation of our estimates?
+```{r}
+sapply(X,FUN=mean)
+sapply(X,FUN=sd)
+```
+
+### Small sample
+
+Let's simulate how sample size of individual experiments affects these parameters:
+
+```{r}
+X<-data.frame(b0=rep(NA,1000),b1=rep(NA,1000))
+for(i in 1:1000){
+  X[i,]<-SimDat(B0=B0,B1=B1,N=10)
+}
+sapply(X,FUN=mean)
+sapply(X,FUN=sd)
+```
+
+### Large Error
+
+Now let's go back to a larger sample but add a larger error term
+
+```{r}
+X<-data.frame(b0=rep(NA,1000),b1=rep(NA,1000))
+for(i in 1:1000){
+  X[i,]<-SimDat(B0=B0,B1=B1,Error=rnorm(1000,sd=100))
+}
+sapply(X,FUN=mean)
+sapply(X,FUN=sd)
+```
+
+## Coefficient errors
+
+More generally, if our estimators are 'unbiased', as in the simulated example, then the standard errors are:
+
+$$SE(\beta_0)^2 = V(\epsilon) \left[\frac{1}{n} + \frac{\bar x^2}{\sum_{i=1}^{n}(x_i-\bar x)^2}\right]$$
+
+and
+
+$$SE(\beta_1)^2 = \frac{V(\epsilon)}{\sum_{i=1}^{n}(x_i-\bar x)^2}$$
+
+Although the residual error $\epsilon$ is unknown, it can be estimated by the *residual standard error* (*RSE*), the square root of the *residual sum of squares* (*RSS*) divided by the degrees of freedom (n-2).
+
+$$RSE = \sqrt{\frac{RSS}{n-2}}$$
+
+Where *RSS* is the sum of the residuals.
+
+With the 'true' estimates falling +/- 2*SE in 95% of simulations. That is, in each simulation we can estimate the confidence interval as:
+
+lower 2.5%: $b_1 - 2\times SE(b_1)$ 
+
+upper 97.5%: $b_1 + 2\times SE(b_1)$
+
+## Association Test
+
+Testing whether $X$ is significantly associated with $Y$ is equivalent to testing whether $b_1$, our estimate of the slope is significantly different from zero, which depends on the standard error of $SE(b_1)$. Under the null hypothesis of no association, the ratio of these parameters follows a $t$-distribution:
+
+$$t = \frac{b_1}{SE(b_1)}$$
+
+### Simulated data
+
+To calculate the SE(b1) and t-statistic to test significance of the model $Y \sim \beta_0 + \beta_1*X$, we first need *RSS*, which requires the model prediction.
+
+First, simulate data again; this time with a smaller sample size:
+
+```{r}
+N<-300
+B0<-500
+B1<-10
+B2<-0
+X_c<-rnorm(N)
+X_f<-sample(c(0,1),N,replace=T)
+Error<-rnorm(N)
+Y<-B0 + B1*X_c + B2*X_f + Error
+b1<-cov(Y,X_c)/var(X_c)
+b0<-mean(Y)-b1*mean(X_c)
+paste("Y ~",b0,"+",b1,"* X_c")
+```
+
+Calculate predicted values for each value of $X_c$
+```{r}
+Mpred<-b0+b1*X_c
+```
+
+We can use *qplot()* to view how the prediction compares to the observed data:
+
+```{r}
+qplot(X_c,Y)+geom_point(aes(x=X_c,y=Mpred),colour="red",size=1)
+```
+
+Residuals are just the distance along $Y$ from each point to the predicted value:
+
+```{r}
+Resid<-Y-Mpred
+qplot(X_c,Resid)
+```
+
+Residual sum of squares (*RSS*) and root squared error (*RSE*) are:
+
+```{r}
+RSS<-sum(Resid^2)
+RSE<-sqrt(RSS/(N-2))
+```
+
+which we can use to calculate $SE(b_1)$ and $t$ as:
+
+```{r}
+xdev<-sum((X_c-mean(X_c))^2)
+SE.b1<-sqrt(RSE^2/xdev)
+t.obs<-b1/SE.b1
+```
+
+Finally, we compare our observed t to a null distribution:
+
+```{r,message=F}
+qplot(rt(10000,N-2)) + geom_vline(xintercept=t.obs, colour="red")
+dt(t.obs,N-2)
+```
+
+The observed value is so far from the expected that there aren't enough decimal places in the [float](https://en.wikipedia.org/wiki/Floating-point_arithmetic)to contain the P-value.
+
+## Model Accuracy
+
+*RSE* is a inversely proportional to the model's accuracy, but is difficult to compare across measurements. A standardized measure of fit is $R_2$ : 
+
+$$R^2 = 1-\frac{RSS}{TSS}$$
+
+Where $TSS = \sum (y_i-\bar y)^2$ , the total sum of squares
+
+This turns out to be identical to the squared correlation coefficient $r$:
+
+$$r = COR_{X,Y} = \frac{COV_{x,y}}{\sqrt{V_x*V_y}}$$
+
+### Simulated data:
+
+```{r}
+TSS<-sum((Y-mean(Y))^2)
+R2<-1-RSS/TSS
+r<-cov(X_c,Y)/sqrt(var(X_c)*var(Y))
+R2
+r^2
+```
+
+# Linear models in R
+
+The `lm` function is used to perform ordinary least squares (OLS) models in R. 
+
+```{r}
+mod1<-lm(Y~X_c)
+str(mod1)
+```
+
+The function returns a list with a number of useful layers. For example, compare the *residuals* slice, which corresponds to a vector of
+
+$$y_i-\bar y$$
+The sum of squared values of this vector is the *RSS*
+
+```{r}
+RSS
+sum(mod1$residuals^2)
+```
+
+The *coefficients* slice gives $b_0$ and $b_1$:
+
+```{r}
+b0
+b1
+mod1$coefficients
+```
+
+A summary of the model can be generated using the `summary()` function. This shows coefficients and results of the significance tests.
+
+```{r}
+t.obs
+dt(t.obs,N-2)
+r^2
+summary(mod1)
+```
+
+We can also generate predicted values from the model using the `predict()` function:
+
+```{r}
+PreY<-predict(mod1)
+qplot(PreY,Y)
+```
+
+# Multiple regression
+
+Let's updpate our simulated data with a non-zero coefficient for the second $X$ variable $X_c$
+
+```{r}
+B2<-5
+B3<--2
+Y<-B0 + B1*X_c + B2*X_f + B3*X_c*X_f+ Error
+```
+
+Inspect the data:
+
+```{r}
+qplot(X_c,Y)
+qplot(as.factor(X_f),Y,geom="boxplot")
+qplot(X_c,Y,colour=as.factor(X_f))
+```
+
+Estimating the coefficients in a multiple regression is more complicated than the single-variable model. However, it is still easy to analyze models in R using the `lm` function. We can also use this to demonstrate the influence of *lurking* or *confounding* variables. These are factors that affect $Y$ but are not in our model. For example, let's try the same single-variable linear model:
+
+```{r}
+mod2<-lm(Y ~ X_c)
+summary(mod2)
+```
+
+Compare the estimates and standard errors for $X_c$ from `mod2` with the true coefficients (are they within 2x SE?):
+
+```{r}
+B<-summary(mod2)$coefficients[,1]
+SE<-summary(mod2)$coefficients[,2]
+B-2*SE
+B+2*SE
+c(B0,B1)
+```
+
+Now contrast to the previous simulated data for mod1, in which $\beta_2 = 0$:
+
+```{r}
+mod1$coefficients
+```
+
+## 'Biased' estimate
+
+This is a good example of 'biased' estimates. By excluding the effect of other variables that affect $Y$, we bias our estimates of $\beta_0$ and $\beta_1$.
+
+Now let's try including the missing variable:
+
+```{r}
+mod3<-lm(Y ~ X_c + X_f)
+summary(mod3)$coefficients[,1:2]
+c(B0,B1)
+```
+
+Now the intercept is within 2x SD, but the $b_1$ is still biased. The reason is that we are also missing an interaction term in the model -- i.e. $b_1$ is different for the two groups in $X_f$.
+
+We use the colon `:` to specify interaction terms in the `lm` function:
+
+```{r, eval=F}
+mod4<-lm(Y ~ X_c + X_f + X_c:X_f)
+```
+
+There is also a short-form using `*` to indicate 'all additive and interaction terms:
+
+```{r}
+mod4<-lm(Y ~ X_c*X_f)
+summary(mod4)$coefficients[,1:2]
+c(B0,B1,B2,B3)
+```
+
+Comparing the simulated with observed coefficients, the model looks unbiased now that we have included all of the factors in the model.
+
+## Model Fit
+
+The `summary()` function provides a $t$-test for each coefficient in the model, but what if we want to compare whether two models are significantly different? For example, what if I want to test if the full model is significantly better than one that only includes $X_c$?:
+
+```{r}
+TestMod1<-lm(Y ~ X_c)
+TestMod2<-lm(Y ~ X_c*X_f)
+```
+
+**NOTE**: The **hierarchical principal** states that if a model contains an interaction term, it should also include the individual effects that make up the interaction. That's way we remove $X_c:X_f$ when we remove $X_f$ in TestMod1 in the above code. 
+
+We could compare the fit of the two models to the data, using $R^2$ values, where $R^2$ is the squared correlation between predicted and observed $Y$:
+
+$$R^2 = [COR(y , \hat y)]^2$$
+
+Let's test this:
+
+```{r}
+b<-TestMod1$coefficients
+Y_hat<-b[1]+b[2]*X_c
+cor(Y,Y_hat)^2
+summary(TestMod1)$r.squared
+```
+
+Comparing the $R^2$ of the two models:
+
+```{r}
+summary(TestMod1)$r.squared
+summary(TestMod2)$r.squared
+```
+
+This looks good, but one problem with the equation is that $R^2$ will improve just by adding random variables:
+```{r}
+TestMod3<-lm(Y ~ X_c*X_f+rnorm(N)+rnorm(N)+rnorm(N)+rnorm(N))
+summary(TestMod3)$r.squared
+```
+
+### $R^{2}_{adj}$
+
+One solution is to adjust or *weight* the estimate of the model fit by the number of parameters included in the model.
+
+For example, the root squared error (RSE) adjusts the RSS based on both the number of observations and the number of model coefficients:
+
+$$RSE = \sqrt{\frac{RSS}{n-p-1}}$$
+
+In an analogous fashion, $R^2_{adj}$ adjusts $R^2$ based on the number of parameters in the model:
+
+$$R^2_{adj} = \frac{(1-R^2)(n-1)}{n-p-1}$$
+Let's test:
+
+```{r}
+R2<-summary(TestMod1)$r.squared
+(Radj<-(1-R2)*(N-1)/(N-1-1))
+summary(TestMod1)$adj.r.squared
+```
+
+Comparing $R^2_{adj}$ for the models shows that model 2 is a better fit, even after controlling for the addition of 2 parameters (i.e. the coefficients for $X_c$ and the $X_c \times X_f$ interaction effect):
+
+```{r}
+summary(TestMod1)$r.squared
+summary(TestMod2)$r.squared
+```
+
+### $F$-test
+
+We can also test statistically whether one model performs better than the other using an F-test:
+
+$$F = \frac{(RSS_1-RSS_2)/q}{RSS_2/(n-p-1)}$$
+
+Where $q$ is the number of parameters differing between the full model (model 2) and the model with $q$ parameters removed (model 1); $RSS_2$ and $RSS_1$ are the residual sums of the respective models.
+
+The `anova()` function can be used to implement this test on an `lm()` object:
+
+```{r}
+anova(TestMod1,TestMod2)
+```
+
+
+**NOTE**: The $t$-statistic in the summary table corresponds to the $F$ statistic for the model with the parameter removed. For example, compare:
+
+```{r}
+TFmod2<-lm(Y ~ X_c + X_f)
+TFmod1<-lm(Y ~ X_c)
+anova(TFmod1,TFmod2)
+```
+
+with the $t$-test in te full model
+
+```{r}
+summary(TFmod2)
+```
+
+# Factors
+
+In our simulated dataset, we encoded a categorical variable (i.e. factor) $X_f$ as 0 or 1. A nice feature of the `lm()` function is that it automatically encodes categorical variables in this way. To demonstrate, let's create a new factor variable $X_fac$ that contains categories "A" and "B":
+
+```{r}
+X_fac<-{}
+X_fac[X_f==0]<-"A"
+X_fac[X_f==1]<-"B"
+str(X_fac)
+```
+
+And compare models with the two encodings:
+
+```{r}
+OldMod<-lm(Y ~ X_c*X_f)
+NewMod1<-lm(Y ~ X_c*X_fac)
+summary(OldMod)$coefficients
+summary(NewMod1)$coefficients
+```
+
+Our $X_f$ is an example of a *dummy variable*, which is just a mathematical encoding of a non-mathematical categorical variable. 
+
+## Intercepts: 1 & 0
+
+Note that if we want to predicted means $\bar y$ for the two groups ($A$ and $B$), we would use the coefficients:
+
+$$\bar y_A = b_0 (+ b_2 \times 0)$$
+$$= b_0$$
+
+$$\bar y_B = b_0 (+ b_2 \times 1)$$
+$$= b_2$$
+
+In this case, the *intercept* $b_0$ is the mean for the first level of $X_f$. Adding $b_2$ (the 'Estimate' for X_f) to the intercept yields the mean for group 'B'.
+
+## Alternative: -1 & 1
+
+An alternative coding for $X_f$ is $-1$ and $+1$. Let's make re-encode $X_f$ this way and compare the coefficients:
+
+```{r}
+X_f2<-X_f
+X_f2[X_f2==0]<--1
+AltMod<-lm(Y ~ X_c*X_f2)
+summary(AltMod)$coefficients[,1:2]
+summary(OldMod)$coefficients[,1:2]
+```
+
+Note how the coefficients have changed; not just for X_f2 but also for the intercept, X_c and the interaction coefficients.
+
+Now the equations are:
+
+$$\bar y_A = b_0 (+ b_2 \times -1)$$
+
+$$= b_0 - b_2$$
+
+and
+
+$$\bar y_B = b_0 (+ b_2 \times 1)$$
+$$= b_0 + b_2 $$
+
+## Beyond binary
+
+We have seen different encodings for a factor with just two levels, but what if there are three or more groups?
+
+In general, a factor with n levels can be encoded by n-1 dummy variables. For example, if we have 3 groups "A", "B", and "C", we can encode dummy variables for "B" and "C" using 1 vs 0:
+
+Category | dummyB (b1) | dummyC (b2)
+---------|--------|-------
+A | 0 | 0
+B | 1 | 0
+C | 0 | 1
+
+So our estimates for group means are:
+
+$$\bar y_A = b_0 + b_1 \times 0 + b_2 \times 0$$
+
+$$= b_0$$
+
+$$\bar y_B = b_0 + b_1 \times 1 + b_2 \times 0$$
+
+$$= b_0 + b_1$$
+
+$$\bar y_A = b_0 + b_1 \times 0 + b_2 \times 1$$
+
+$$= b_0 + b_2$$
+
+We could add a fourth variable "D" to our factor, and here again there are different possible codings.
+
+First, we could add another dummy variable:
+
+Category | dummyB (b1) | dummyC (b2) | dummyD (b3)
+---------|-------------|-------------|------------|
+A | 0 | 0 | 0
+B | 1 | 0 | 0
+C | 0 | 1 | 0
+D | 0 | 0 | 1
+
+And indeed, this is how `lm()` would encode it.
+
+> What is an alternative way to code for "D" without adding a column? 
+
+> What would the equation for $\hat y_D$ look like for these two ways of encoding?
+
+We can see this encoded in the `lm` output. For example:
+
+```{r}
+Yr<-rnorm(100)
+Xr<-sample(c("A","B","C"),100,replace=T)
+ModRand<-lm(Yr ~ Xr)
+summary(ModRand)$coefficients[,1:2]
+```
+
+# Nonlinear regression
+
+We have already looked at the effect of an interaction term on our simulated data. This is an example of a non-linear relationship because the effect of $X_c$ on $Y$ is **dependent** on the value of $X_f$.
+
+Another form of nonlineartity is when the relationship between two variables do not form a straight line. For example:
+
+```{r}
+X<-rnorm(100)+2
+Y<-exp(X)+rnorm(100,sd=5)+100
+qplot(X,Y)+
+  geom_smooth(method="lm",colour="red",se=F)
+```
+
+### Quadratic
+
+A simple way to test for a nonlinear relationship between two variables is to add a square of the predictor variable:
+
+```{r}
+summary(lm(Y ~ X + I(X^2)))
+```
+
+**NOTE**: the use of the identity function `I()` for the squared term. This is necessary for `lm()` to recognize the parameter. You can remove the `I()` function and re-run the command for comparison.
+
+> How can we test if the non-linear model fits the data better than the linear model?
+
+We can use the $F$-test:
+
+```{r}
+LMod<-lm(Y ~ X)
+nLMod<-lm(Y ~ X + I(X^2))
+anova(LMod,nLMod)
+```
+
+The result is highly significant, indicating a much better fit to the data. This is evident if we plot the linear and quadratic models:
+
+```{r}
+qplot(X,Y)+
+  geom_smooth(method="lm",
+              formula = y ~ x, colour="blue",se=F)+
+  geom_smooth(method="lm",
+              formula = y ~ x + I(x^2),colour="red",se=F)
+```
+
+Note that the quadratic model fits pretty well, but that doesn't mean that the 'true' relationship is quadratic. In fact, it's exponential in our simulation. 
+
+We can add high-order polynomials as well:
+
+```{r}
+qplot(X,Y)+
+  geom_smooth(method="lm",
+              formula = y ~ x + I(x^2) 
+              + I(x^3),colour="orange",se=F) +
+  geom_smooth(method="lm",
+              formula = y ~ x + I(x^2) 
+              + I(x^3) + I(x^4),colour="blue",se=F) 
+```
+
+> Write a script to conduct an $F$-test to see if adding the 3-rd order (x^3) and/or 4th-order (x^4) terms are significantly better than the simpler 2nd-order model.
+
+We could try other transformations of the predictor variable:
+
+### Square root
+
+```{r}
+qplot(X,Y)+
+  geom_smooth(method="lm",
+              formula = y ~ sqrt(x),colour="red",se=F)
+```
+
+### Exponential
+
+```{r}
+expX<-exp(X)
+qplot(expX,Y)+
+  geom_smooth(method="lm",
+              formula = y ~ x,colour="red",se=F)
+```
+
+### Transform Y
+
+Just as we can transform the predictors, we can transform the response variable. The most common is the log-transformation, which is often useful for data involving counts and unbounded percentages (Poisson distribution) and when the predictor variables are multiplicative rather than additive. This is because:
+
+$$log(X_1 X_2 X_3) = log(X_1) + log(X_2) + log(X_3)$$
+
+
+```{r}
+Yln<-log(Y)
+qplot(X,Yln)+
+  geom_smooth(method="lm",
+              formula = y ~ x,colour="red",se=F)
+```
+
+# Biased errors
+
+So far we have assumed that error terms are correlated. That is, the error associated with $X_v$ ($\epsilon_v$) is independent of $X_f$ ($\epsilon_f$). Since they are independent, we can add them together into a single error term $\epsilon$. 
+
+Correlated errors are common in biological studies. Individuals from the same group may have different error variances, for example different treatments, populations or families. 
+
+Space and time also cause correlated errors since two samples from adjacent locations or similar time points are more likely to be similar than two randomly chosen samples. Treating these data as independent data points using a simple `lm()` model is a form of *pseudoreplication*.
+
+What happens if errors are not independent? Once again, let's try a simulation:
+
+```{r}
+corY<-B0 + B1*X_c + B2*X_f + rnorm(100) +
+  rnorm(100,sd=10)*X_f
+```
+
+This is an example of *heterskedasticity*, or unequal variances among groups:
+
+```{r}
+qplot(X_c,corY,colour=as.factor(X_f))
+corMod<-lm(corY ~ X_c + X_f)
+qplot(as.factor(X_f),residuals(corMod), geom="boxplot")
+```
+
+Another common source of heteroskedasticity is the scaling of the variance with the mean, with the points spread out at higher levels of $X$:
+
+```{r}
+X<-rnorm(1000)
+Y<-2*exp(X)*rnorm(1000,sd=5)
+qplot(X,Y)+geom_smooth()
+```
+
+In this case, transforming the response variable with a log function reduces the large variables more than the small ones, resulting lis less variability:
+
+```{r}
+qplot(X,log(Y))
+```
+
+# Outliers
+
+Outliers can have a large effect on our estimates, for example, compare these models:
+
+```{r}
+X<-rnorm(100)
+Y<-X+rnorm(100)
+summary(lm(Y ~ X))
+
+Yout<-Y
+Yout[X==max(X)]<- 100
+X[Yout==100]<- 10
+summary(lm(Yout ~ X))
+qplot(X,Yout,colour=I("blue"))+
+  geom_point(aes(max(X),max(Yout),colour="red"))+
+  geom_smooth(method="lm",se=F,colour="red")+
+  geom_smooth(aes(X,Y),method="lm",se=F,colour="blue")
+
+```
+
+Outliers can be hard to detect when there are many variables. In these cases we can use a *leverage statistic* to identify points with unusually high influence. One option for this is the `hat()` function in R:
+
+```{r}
+outMod<-lm(Yout ~ X)
+M<-model.matrix(outMod)
+Lev<-hat(M)
+qplot(Lev)
+Yout[Lev > 0.2] # value of Yout with high leverage
+```
+
+# Colinearity
+
+Collinearity occurs when two or more predictors are highly correlated. 
+
+```{r}
+X1<-rnorm(100)
+X2<-X1+rnorm(100,sd=0.01)
+Y<-100+2*X1+rnorm(100)
+qplot(X1,X2)
+summary(lm(Y ~ X1 + X2))
+```
+
+Notice that $X_2$ does not affect $Y$ in the simulated data, but $X_1$ does. However, neither is significant in the model, and estimates are far from the actual values. Re-run the above script several times and compare the coefficients.
+
+The reason is that there are many parameter values of the collinear variables that give very simlar estimates of Y.
+
+Visual inspection of bivariate plots, or a correlation matrix, of all your variables, can help to identify collinear data. However, collinearity may exist among more than 2 variables in combination, this is called *multicollinearity*. For example:
+
+```{r}
+CorDat<-data.frame(X1=rnorm(100),X2=rnorm(100),X3=rnorm(100))
+CorDat$X4<-CorDat$X1+CorDat$X2+CorDat$X3
+cor(x=CorDat)
+```
+
+In this example, $X4$ is a linear combination of $X1$ through $X3$, and yet the pairwise correlations are week. The variance inflation factor **VIF** can be applied to a linear model object to test for multicollinearity using the `vif()` function in the `car` package in R.
+
+# KNN regression
+
+$K$-nearest neighbours regression is a nonparametric method, making it more robust to violations of the assumptions of parametric model (e.g. unbiased estimators, normally distributed error, etc.) 
+
+The approach examines $K$ points closest to a particular data point $x_0$ and then estimates a function for that set of points:
+
+$$\hat f(x_0) = \frac{1}{K}\sum_{x_i \in N_0}y_i$$
+
+where $N_0$ is the set of training observations.
+
+When $K = 1$ every point is fit, whereas the function becomes smoother as $K$ increases. The optimal $K$ requires finding the optimum between minimizing the **bias** of the model due to poorly fit data points (low $K$) while minimizing the **variance** -- i.e. maximizing the likelihood that the model will work well on an independent dataset. This is the *bias-variance* trade-off.
+
+Linear regression will generally out-perform KNN if the linear function is close to the 'true' function, and as the ratio of observations ($n$) to predictors ($p$) decreases. However, KNN can be useful for large datasets with complex relationships between predictor and response variables.
+
+KNN can be implemented in R using the `knn.reg()` function from the `FNN` library.
+
+### $K = 10$ 
+
+```{r}
+library(FNN)
+trait.knn<-knn.reg(TraitDat$LatSD, y=TraitDat$PC1SD, k=10)
+qplot(TraitDat$PC1SD, trait.knn$pred)+
+      xlab("y") + ylab(expression(hat(y)))
+```
+
+### $K = 1$
+
+```{r}
+trait.knn<-knn.reg(TraitDat$LatSD, y=TraitDat$PC1SD, k=1)
+qplot(TraitDat$PC1SD, trait.knn$pred)+
+      xlab("y") + ylab(expression(hat(y)))
+```
+
+
+
+# Assignment: 
+
+There are four hypotheses spelled out [above](./1_LinearModels.html#questionshypotheses). Write a report in R markdown that addresses each of these hypotheses, using visualizations and linear models. Try for a robust analysis by considering some of the issues discussed in this tutorial and in Chapter 3 of *An Introduction to Statistical Learning* (model fit, lurking variables, nonlinearity, etc.)
