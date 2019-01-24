@@ -1,0 +1,299 @@
+"Reference","Species","Trait","Garden","Range","PC1SD","LatSD"
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","defence",1,"I",0.539904852,1.467035938
+"Cipollini et al. (2005)","Alliaria petiolata","defence",1,"I",1.476593916,0.408588357
+"Leger and Forister (2005)","Eschscholzia californica","defence",1,"I",0.734633253,1.608897481
+"Muller and Martens (2005)","Lepidium draba","defence",1,"I",2.422261528,1.641378692
+"Willis et al. (1999)","Lythrum salicaria","defence",1,"I",1.884935087,3.566783486
+"Franks et al. (2007)","Melaleuca quinquenervia","defence",1,"I",0.771331728,0.333333136
+"Siemann and Rogers (2001)","Sapium sebiferum","defence",1,"I",0.187549491,0.94978945
+"Joshi and Vrieling (2005)","Senecio jacobaea","defence",1,"I",0.665069245,3.649200826
+"Stastny et al. (2005)","Senecio jacobaea","defence",1,"I",0.844657494,3.042366738
+"Handley et al. (2008)","Senecio vulgaris","defence",1,"I",0.959876022,4.814908542
+"Wolfe et al. (2004)","Silene latifolia","defence",1,"I",1.309094937,5.617953676
+"Hull-Sanders et al. (2007)","Solidago gigantea","defence",1,"I",0.940981195,2.266278088
+"Meyer et al. (2005)","Solidago gigantea","defence",1,"I",1.722010544,2.205947642
+"Willis et al. (1999)","Lythrum salicaria","growth",1,"I",0.885479997,2.912314211
+"Franks et al. (2007)","Melaleuca quinquenervia","growth",1,"I",1.062016629,0.333333136
+"Kaufman and Smouse (2001)","Melaleuca quinquenervia","growth",1,"I",1.200811399,0.366919103
+"Lavergne and Molofsky (2007)","Phalaris arundinacea","growth",1,"I",0.739275285,5.011661401
+"Handley et al. (2008)","Senecio vulgaris","growth",1,"I",0.952327786,4.814908542
+"Wolfe et al. (2004)","Silene latifolia","growth",1,"I",0.719779436,5.481067894
+"van Kleunen and Schmid (2003)","Solidago canadensis","growth",1,"I",1.058958916,2.413308651
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",1,"I",1.298596359,2.942603889
+"Maron et al. (2004)","Hypericum perforatum","physiology",1,"I",1.081138269,2.636055363
+"Cripps et al. (2009)","Lepidium draba","physiology",1,"I",1.096569921,2.228022172
+"Ross and Auge (2008)","Mahonia aquifolium","physiology",1,"I",1.134654759,1.019363804
+"Kaufman and Smouse (2001)","Melaleuca quinquenervia","physiology",1,"I",1.014052049,0.366919103
+"Cano et al. (2008)","Senecio pterophorus","physiology",1,"I",1.118271984,0.073911861
+"Wolfe et al. (2004)","Silene latifolia","physiology",1,"I",0.764166564,5.481067894
+"van Kleunen and Schmid (2003)","Solidago canadensis","physiology",1,"I",1.045870034,2.413308651
+"Guesewell et al. (2006)","Solidago gigantea","physiology",1,"I",2.361237832,2.756090969
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",1,"I",1.743458005,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",1,"I",0.728755213,1.597940142
+"Bossdorf et al. (2004 - Ecology Letters)","Alliaria petiolata","reproduction",1,"I",0.614009355,1.516814923
+"Henery et al. (2010)","Centaurea stoebe","reproduction",1,"I",1.177426101,1.310916124
+"Williams et al. (2008)","Cynoglossum officinale","reproduction",1,"I",0.674599977,2.000464919
+"Leger and Rice (2003)","Eschscholzia californica","reproduction",1,"I",0.802022245,1.488382391
+"Maron et al. (2004)","Hypericum perforatum","reproduction",1,"I",0.873430943,2.636055363
+"astlova and Kv?t (2002)","Lythrum salicaria","reproduction",1,"I",0.276882253,0.076376262
+"Chun et al. 2007","Lythrum salicaria","reproduction",1,"I",1.302113798,0.47560877
+"van Kleunen and Fischer (2008)","Mimulus guttatus","reproduction",1,"I",1.196767242,6.85931414
+"Joshi and Vrieling (2005)","Senecio jacobaea","reproduction",1,"I",0.760777029,3.655494134
+"Stastny et al. (2005)","Senecio jacobaea","reproduction",1,"I",0.888473099,3.042366738
+"Cano et al. (2008)","Senecio pterophorus","reproduction",1,"I",0.770826455,0.073911861
+"Handley et al. (2008)","Senecio vulgaris","reproduction",1,"I",1.074525067,4.814908542
+"Wolfe et al. (2004)","Silene latifolia","reproduction",1,"I",1.164021617,5.721476568
+"van Kleunen and Schmid (2003)","Solidago canadensis","reproduction",1,"I",0.73319087,2.413308651
+"Guesewell et al. (2006)","Solidago gigantea","reproduction",1,"I",1.136662683,2.824578404
+"Meyer et al. (2005)","Solidago gigantea","reproduction",1,"I",1.193598317,2.205947642
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",1,"I",1.843584902,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",1,"I",0.566316904,1.597940142
+"Henery et al. (2010)","Centaurea stoebe","size",1,"I",0.791564282,1.384739208
+"Williams et al. (2008)","Cynoglossum officinale","size",1,"I",0.548277366,2.000464919
+"Leger and Rice (2003)","Eschscholzia californica","size",1,"I",0.771071605,1.488382391
+"Maron et al. (2004)","Hypericum perforatum","size",1,"I",1.036080485,2.636055363
+"Vilà et al. (2003)","Hypericum perforatum","size",1,"I",1.00939101,2.580888633
+"Cripps et al. (2009)","Lepidium draba","size",1,"I",1.7607509,2.228022172
+"Muller and Martens (2005)","Lepidium draba","size",1,"I",0.960231163,1.641378692
+"Vilà et al. (2003)","Lolium multiflorum","size",1,"I",0.841391395,2.580888633
+"astlova and Kv?t (2002)","Lythrum salicaria","size",1,"I",0.291711964,0.076376262
+"Chun et al. 2007","Lythrum salicaria","size",1,"I",1.695345675,0.47560877
+"Willis et al. (1999)","Lythrum salicaria","size",1,"I",1.005214677,2.912314211
+"Ross and Auge (2008)","Mahonia aquifolium","size",1,"I",1.736533083,1.019363804
+"Franks et al. (2007)","Melaleuca quinquenervia","size",1,"I",1.41317497,0.333333136
+"Kaufman and Smouse (2001)","Melaleuca quinquenervia","size",1,"I",0.72667473,0.366919103
+"van Kleunen and Fischer (2008)","Mimulus guttatus","size",1,"I",0.643483774,6.85931414
+"Lavergne and Molofsky (2007)","Phalaris arundinacea","size",1,"I",1.159038353,5.011661401
+"Siemann and Rogers (2001)","Sapium sebiferum","size",1,"I",0.973410596,0.94978945
+"Bossdorf et al. (2008)","Senecio inaequidens","size",1,"I",1.433104789,3.2920242
+"Joshi and Vrieling (2005)","Senecio jacobaea","size",1,"I",1.120786372,3.649200826
+"Stastny et al. (2005)","Senecio jacobaea","size",1,"I",0.810306148,3.042366738
+"Cano et al. (2008)","Senecio pterophorus","size",1,"I",0.75077196,0.073911861
+"Handley et al. (2008)","Senecio vulgaris","size",1,"I",1.094674396,4.814908542
+"Wolfe et al. (2004)","Silene latifolia","size",1,"I",1.114016714,5.617953676
+"van Kleunen and Schmid (2003)","Solidago canadensis","size",1,"I",1.053246738,2.413308651
+"Guesewell et al. (2006)","Solidago gigantea","size",1,"I",1.445691183,2.824578404
+"Meyer et al. (2005)","Solidago gigantea","size",1,"I",1.322335092,2.205947642
+"Schlaepfer et al. (2010)","Solidago gigantea","size",1,"I",1.212852212,2.942603889
+"Brown and Eckert (2005)","Butomus umbellatus","survival",1,"I",1.289963162,2.413466682
+"Henery et al. (2010)","Centaurea stoebe","survival",1,"I",0.872517242,1.384739208
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",1,"I",0.655358157,2.942603889
+"Cipollini et al. (2005)","Alliaria petiolata","defence",2,"I",1.574931728,0.408588357
+"Maron et al. (2004)","Hypericum perforatum","defence",2,"I",0.820332065,2.443457112
+"Franks et al. (2007)","Melaleuca quinquenervia","defence",2,"I",1.127868916,0.333333136
+"Hull-Sanders et al. (2007)","Solidago gigantea","defence",2,"I",1.159386547,2.266278088
+"Meyer et al. (2005)","Solidago gigantea","defence",2,"I",2.141899985,2.205947642
+"Willis et al. (1999)","Lythrum salicaria","growth",2,"I",0.370987899,2.912314211
+"Franks et al. (2007)","Melaleuca quinquenervia","growth",2,"I",1.087997425,0.333333136
+"Wolfe et al. (2004)","Silene latifolia","growth",2,"I",1.068431762,5.481067894
+"van Kleunen and Schmid (2003)","Solidago canadensis","growth",2,"I",0.928180679,2.413308651
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",2,"I",0.705331243,2.942603889
+"Ross and Auge (2008)","Mahonia aquifolium","physiology",2,"I",1.466486335,1.019363804
+"Cano et al. (2008)","Senecio pterophorus","physiology",2,"I",0.578207763,0.06666667
+"Wolfe et al. (2004)","Silene latifolia","physiology",2,"I",1.023415414,5.621075629
+"van Kleunen and Schmid (2003)","Solidago canadensis","physiology",2,"I",0.802699011,2.413308651
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",2,"I",1.29346986,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",2,"I",1.52016985,1.597940142
+"Williams et al. (2008)","Cynoglossum officinale","reproduction",2,"I",0.543255172,2.028759703
+"Leger and Rice (2003)","Eschscholzia californica","reproduction",2,"I",0.694536912,1.488382391
+"Maron et al. (2004)","Hypericum perforatum","reproduction",2,"I",1.242572325,2.53208502
+"Willis et al. (1999)","Lythrum salicaria","reproduction",2,"I",0.454454532,2.912314211
+"van Kleunen and Fischer (2008)","Mimulus guttatus","reproduction",2,"I",0.819884895,6.85931414
+"van Kleunen and Schmid (2003)","Solidago canadensis","reproduction",2,"I",0.653411748,2.413308651
+"Meyer et al. (2005)","Solidago gigantea","reproduction",2,"I",0.947421446,2.205947642
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",2,"I",1.411361561,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",2,"I",1.628310008,1.597940142
+"Williams et al. (2008)","Cynoglossum officinale","size",2,"I",0.669747759,2.028759703
+"Leger and Rice (2003)","Eschscholzia californica","size",2,"I",0.754256645,1.488382391
+"Maron et al. (2004)","Hypericum perforatum","size",2,"I",0.847368134,2.53208502
+"Willis et al. (1999)","Lythrum salicaria","size",2,"I",0.642304625,2.912314211
+"Ross and Auge (2008)","Mahonia aquifolium","size",2,"I",1.616644234,1.019363804
+"Franks et al. (2007)","Melaleuca quinquenervia","size",2,"I",1.259944537,0.333333136
+"van Kleunen and Fischer (2008)","Mimulus guttatus","size",2,"I",1.063520737,6.85931414
+"Bossdorf et al. (2008)","Senecio inaequidens","size",2,"I",1.050494096,3.2920242
+"Joshi and Vrieling (2005)","Senecio jacobaea","size",2,"I",0.774550435,3.649200826
+"Wolfe et al. (2004)","Silene latifolia","size",2,"I",1.491699735,5.621075629
+"van Kleunen and Schmid (2003)","Solidago canadensis","size",2,"I",1.018420561,2.413308651
+"Meyer et al. (2005)","Solidago gigantea","size",2,"I",1.274782272,2.205947642
+"Schlaepfer et al. (2010)","Solidago gigantea","size",2,"I",2.033831543,2.942603889
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",2,"I",0.912008897,2.942603889
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",3,"I",1.283993409,2.942603889
+"Cano et al. (2008)","Senecio pterophorus","physiology",3,"I",1.049108636,0.073911861
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",3,"I",1.647487195,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",3,"I",1.744079971,1.381142843
+"Maron et al. (2004)","Hypericum perforatum","reproduction",3,"I",0.990488131,2.596443583
+"Cano et al. (2008)","Senecio pterophorus","reproduction",3,"I",0.910838713,0.073911861
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",3,"I",1.836847804,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",3,"I",1.578570889,1.381142843
+"Maron et al. (2004)","Hypericum perforatum","size",3,"I",0.999479273,2.596443583
+"Bossdorf et al. (2008)","Senecio inaequidens","size",3,"I",0.682352013,3.2920242
+"Cano et al. (2008)","Senecio pterophorus","size",3,"I",0.507212146,0.073911861
+"Schlaepfer et al. (2010)","Solidago gigantea","size",3,"I",1.347719295,2.942603889
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",3,"I",0.923142503,2.942603889
+"Maron et al. (2004)","Hypericum perforatum","defence",4,"I",1.093865089,2.443457112
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",4,"I",1.261226677,2.942603889
+"Maron et al. (2004)","Hypericum perforatum","physiology",4,"I",1.457259019,2.443457112
+"Cano et al. (2008)","Senecio pterophorus","physiology",4,"I",0.769253192,0.073911861
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",4,"I",1.334355046,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",4,"I",1.096769024,1.381142843
+"Maron et al. (2004)","Hypericum perforatum","reproduction",4,"I",1.095803363,2.443457112
+"Cano et al. (2008)","Senecio pterophorus","reproduction",4,"I",0.991310443,0.073911861
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",4,"I",1.618282962,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",4,"I",1.388482685,1.381142843
+"Maron et al. (2004)","Hypericum perforatum","size",4,"I",0.81433044,2.443457112
+"Bossdorf et al. (2008)","Senecio inaequidens","size",4,"I",0.802158192,3.2920242
+"Cano et al. (2008)","Senecio pterophorus","size",4,"I",0.665434675,0.073911861
+"Schlaepfer et al. (2010)","Solidago gigantea","size",4,"I",1.8395802,2.942603889
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",4,"I",0.519703603,2.942603889
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","defence",1,"N",1.10992193,3.688016175
+"Cipollini et al. (2005)","Alliaria petiolata","defence",1,"N",0.917563077,0.680114856
+"Leger and Forister (2005)","Eschscholzia californica","defence",1,"N",0.320593342,1.935087032
+"Muller and Martens (2005)","Lepidium draba","defence",1,"N",1.901511046,1.328600625
+"Willis et al. (1999)","Lythrum salicaria","defence",1,"N",1.858659239,3.036460538
+"Franks et al. (2007)","Melaleuca quinquenervia","defence",1,"N",1.233918363,5.741098304
+"Joshi and Vrieling (2005)","Senecio jacobaea","defence",1,"N",0.751298036,2.748159557
+"Stastny et al. (2005)","Senecio jacobaea","defence",1,"N",1.552482911,2.276586747
+"Handley et al. (2008)","Senecio vulgaris","defence",1,"N",1.074083641,3.095752765
+"Wolfe et al. (2004)","Silene latifolia","defence",1,"N",1.02042751,11.45758353
+"Hull-Sanders et al. (2007)","Solidago gigantea","defence",1,"N",1.474879546,1.750279025
+"Meyer et al. (2005)","Solidago gigantea","defence",1,"N",1.36922268,1.858751373
+"Willis et al. (1999)","Lythrum salicaria","growth",1,"N",1.243283741,2.500833195
+"Franks et al. (2007)","Melaleuca quinquenervia","growth",1,"N",0.682337622,5.741098304
+"Kaufman and Smouse (2001)","Melaleuca quinquenervia","growth",1,"N",0.511128595,5.660740366
+"Lavergne and Molofsky (2007)","Phalaris arundinacea","growth",1,"N",1.385086383,2.779941207
+"Erfmeier and Bruelheide (2005)","Rhododendron ponticum","growth",1,"N",1.304045973,2.768186181
+"Handley et al. (2008)","Senecio vulgaris","growth",1,"N",0.8928797,3.095752765
+"Wolfe et al. (2004)","Silene latifolia","growth",1,"N",1.2684425,6.997320916
+"van Kleunen and Schmid (2003)","Solidago canadensis","growth",1,"N",1.038821786,1.81310388
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",1,"N",0.631450382,4.128696727
+"Widmer et al. (2007)","Centaurea solstitialis","physiology",1,"N",0.526016487,2.734907097
+"Maron et al. (2004)","Hypericum perforatum","physiology",1,"N",0.855879508,4.084980991
+"Cripps et al. (2009)","Lepidium draba","physiology",1,"N",0.910997067,3.610350921
+"Ross and Auge (2008)","Mahonia aquifolium","physiology",1,"N",1.657825899,2.146896986
+"Kaufman and Smouse (2001)","Melaleuca quinquenervia","physiology",1,"N",1.045061423,5.660740366
+"Cano et al. (2008)","Senecio pterophorus","physiology",1,"N",1.03308498,1.2025051
+"Wolfe et al. (2004)","Silene latifolia","physiology",1,"N",1.245863042,6.997320916
+"van Kleunen and Schmid (2003)","Solidago canadensis","physiology",1,"N",1.071655754,1.81310388
+"Guesewell et al. (2006)","Solidago gigantea","physiology",1,"N",2.276279645,0.72712344
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",1,"N",1.577583687,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",1,"N",1.609338272,3.688016175
+"Bossdorf et al. (2004 - Ecology Letters)","Alliaria petiolata","reproduction",1,"N",1.261603528,3.688016175
+"Henery et al. (2010)","Centaurea stoebe","reproduction",1,"N",1.543486259,1.698209489
+"Williams et al. (2008)","Cynoglossum officinale","reproduction",1,"N",1.318168222,2.505230399
+"Leger and Rice (2003)","Eschscholzia californica","reproduction",1,"N",0.804210091,1.480584182
+"Maron et al. (2004)","Hypericum perforatum","reproduction",1,"N",1.173421164,4.084980991
+"astlova and Kv?t (2002)","Lythrum salicaria","reproduction",1,"N",0.267327278,0.853587202
+"Chun et al. 2007","Lythrum salicaria","reproduction",1,"N",0.30721611,0.050917508
+"van Kleunen and Fischer (2008)","Mimulus guttatus","reproduction",1,"N",1.737434755,4.635179563
+"Joshi and Vrieling (2005)","Senecio jacobaea","reproduction",1,"N",0.697499124,2.067057637
+"Stastny et al. (2005)","Senecio jacobaea","reproduction",1,"N",0.785723023,2.276586747
+"Cano et al. (2008)","Senecio pterophorus","reproduction",1,"N",0.355783458,1.2025051
+"Handley et al. (2008)","Senecio vulgaris","reproduction",1,"N",1.23011497,3.095752765
+"Wolfe et al. (2004)","Silene latifolia","reproduction",1,"N",1.455320921,11.45758353
+"van Kleunen and Schmid (2003)","Solidago canadensis","reproduction",1,"N",1.02893814,1.81310388
+"Guesewell et al. (2006)","Solidago gigantea","reproduction",1,"N",0.776768287,0.858840026
+"Meyer et al. (2005)","Solidago gigantea","reproduction",1,"N",1.26548947,1.858751373
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",1,"N",1.020953694,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",1,"N",1.421457549,3.688016175
+"Widmer et al. (2007)","Centaurea solstitialis","size",1,"N",1.012378898,2.734907097
+"Henery et al. (2010)","Centaurea stoebe","size",1,"N",1.920204686,1.842437376
+"Williams et al. (2008)","Cynoglossum officinale","size",1,"N",0.688703656,2.505230399
+"Leger and Rice (2003)","Eschscholzia californica","size",1,"N",1.606427212,1.480584182
+"Maron et al. (2004)","Hypericum perforatum","size",1,"N",0.961563945,4.084980991
+"Vilà et al. (2003)","Hypericum perforatum","size",1,"N",1.034892128,4.06246559
+"Cripps et al. (2009)","Lepidium draba","size",1,"N",1.151988556,3.610350921
+"Muller and Martens (2005)","Lepidium draba","size",1,"N",1.258488134,1.263699155
+"Vilà et al. (2003)","Lolium multiflorum","size",1,"N",1.303501525,4.06246559
+"astlova and Kv?t (2002)","Lythrum salicaria","size",1,"N",0.632227423,0.853587202
+"Chun et al. 2007","Lythrum salicaria","size",1,"N",0.990287433,0.050917508
+"Willis et al. (1999)","Lythrum salicaria","size",1,"N",1.514968537,2.500833195
+"Ross and Auge (2008)","Mahonia aquifolium","size",1,"N",1.94368886,2.146896986
+"Franks et al. (2007)","Melaleuca quinquenervia","size",1,"N",1.324910173,5.741098304
+"Kaufman and Smouse (2001)","Melaleuca quinquenervia","size",1,"N",0.88283113,5.660740366
+"van Kleunen and Fischer (2008)","Mimulus guttatus","size",1,"N",1.693338129,5.81212298
+"Lavergne and Molofsky (2007)","Phalaris arundinacea","size",1,"N",1.700514677,2.779941207
+"Erfmeier and Bruelheide (2005)","Rhododendron ponticum","size",1,"N",0.634908706,2.768186181
+"Bossdorf et al. (2008)","Senecio inaequidens","size",1,"N",1.445898711,1.87714887
+"Joshi and Vrieling (2005)","Senecio jacobaea","size",1,"N",1.069761624,2.969542358
+"Stastny et al. (2005)","Senecio jacobaea","size",1,"N",1.125621776,2.276586747
+"Cano et al. (2008)","Senecio pterophorus","size",1,"N",1.231173149,1.2025051
+"Handley et al. (2008)","Senecio vulgaris","size",1,"N",1.375955962,3.095752765
+"Wolfe et al. (2004)","Silene latifolia","size",1,"N",1.630870458,6.169611217
+"van Kleunen and Schmid (2003)","Solidago canadensis","size",1,"N",0.925929299,1.81310388
+"Guesewell et al. (2006)","Solidago gigantea","size",1,"N",1.33338064,0.858840026
+"Meyer et al. (2005)","Solidago gigantea","size",1,"N",1.119350932,1.858751373
+"Schlaepfer et al. (2010)","Solidago gigantea","size",1,"N",2.614323516,4.128696727
+"Brown and Eckert (2005)","Butomus umbellatus","survival",1,"N",1.229194381,2.119054474
+"Henery et al. (2010)","Centaurea stoebe","survival",1,"N",1.131881454,2.070105833
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",1,"N",1.25840236,4.128696727
+"Cipollini et al. (2005)","Alliaria petiolata","defence",2,"N",1.111954843,0.680114856
+"Maron et al. (2004)","Hypericum perforatum","defence",2,"N",1.714566285,3.934186847
+"Franks et al. (2007)","Melaleuca quinquenervia","defence",2,"N",0.878441139,5.741098304
+"Hull-Sanders et al. (2007)","Solidago gigantea","defence",2,"N",1.308338394,1.750279025
+"Meyer et al. (2005)","Solidago gigantea","defence",2,"N",0.936024871,1.858751373
+"Willis et al. (1999)","Lythrum salicaria","growth",2,"N",1.152771645,6.250339249
+"Franks et al. (2007)","Melaleuca quinquenervia","growth",2,"N",0.490010877,5.741098304
+"Erfmeier and Bruelheide (2005)","Rhododendron ponticum","growth",2,"N",1.652726469,2.768186181
+"Wolfe et al. (2004)","Silene latifolia","growth",2,"N",1.292191096,6.997320916
+"van Kleunen and Schmid (2003)","Solidago canadensis","growth",2,"N",1.050785293,1.81310388
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",2,"N",1.147901212,4.128696727
+"Ross and Auge (2008)","Mahonia aquifolium","physiology",2,"N",1.567537962,2.146896986
+"Cano et al. (2008)","Senecio pterophorus","physiology",2,"N",1.156865289,1.2025051
+"Wolfe et al. (2004)","Silene latifolia","physiology",2,"N",0.936721568,7.44651257
+"van Kleunen and Schmid (2003)","Solidago canadensis","physiology",2,"N",1.352453048,1.81310388
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",2,"N",1.59144312,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",2,"N",0.837576918,3.688016175
+"Williams et al. (2008)","Cynoglossum officinale","reproduction",2,"N",1.335237762,2.505230399
+"Leger and Rice (2003)","Eschscholzia californica","reproduction",2,"N",1.173120678,1.481643601
+"Maron et al. (2004)","Hypericum perforatum","reproduction",2,"N",0.709077652,3.558507311
+"Willis et al. (1999)","Lythrum salicaria","reproduction",2,"N",1.35456326,2.835308135
+"van Kleunen and Fischer (2008)","Mimulus guttatus","reproduction",2,"N",1.691061731,5.81212298
+"van Kleunen and Schmid (2003)","Solidago canadensis","reproduction",2,"N",1.085699877,1.81310388
+"Meyer et al. (2005)","Solidago gigantea","reproduction",2,"N",1.111760489,1.858751373
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",2,"N",1.700139673,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",2,"N",0.671390004,3.688016175
+"Williams et al. (2008)","Cynoglossum officinale","size",2,"N",1.215909835,2.505230399
+"Leger and Rice (2003)","Eschscholzia californica","size",2,"N",1.487907893,1.481643601
+"Maron et al. (2004)","Hypericum perforatum","size",2,"N",1.228564876,3.558507311
+"Willis et al. (1999)","Lythrum salicaria","size",2,"N",1.713394775,6.250339249
+"Ross and Auge (2008)","Mahonia aquifolium","size",2,"N",2.182252682,2.146896986
+"Franks et al. (2007)","Melaleuca quinquenervia","size",2,"N",1.260300183,5.741098304
+"van Kleunen and Fischer (2008)","Mimulus guttatus","size",2,"N",1.40761817,5.81212298
+"Erfmeier and Bruelheide (2005)","Rhododendron ponticum","size",2,"N",1.645407238,2.768186181
+"Bossdorf et al. (2008)","Senecio inaequidens","size",2,"N",1.256885174,1.87714887
+"Joshi and Vrieling (2005)","Senecio jacobaea","size",2,"N",1.02042997,2.933012803
+"Cano et al. (2008)","Senecio pterophorus","size",2,"N",1.181078219,1.2025051
+"Wolfe et al. (2004)","Silene latifolia","size",2,"N",1.09774943,7.436914166
+"van Kleunen and Schmid (2003)","Solidago canadensis","size",2,"N",1.035255225,1.81310388
+"Meyer et al. (2005)","Solidago gigantea","size",2,"N",1.140500664,1.858751373
+"Schlaepfer et al. (2010)","Solidago gigantea","size",2,"N",2.141299284,4.128696727
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",2,"N",1.091225034,4.128696727
+"Erfmeier and Bruelheide (2005)","Rhododendron ponticum","growth",3,"N",1.428477653,2.768186181
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",3,"N",0.568016562,4.128696727
+"Cano et al. (2008)","Senecio pterophorus","physiology",3,"N",1.10364367,1.2025051
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",3,"N",1.25562678,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",3,"N",0.834260998,3.17287195
+"Maron et al. (2004)","Hypericum perforatum","reproduction",3,"N",1.004224864,4.057857125
+"Cano et al. (2008)","Senecio pterophorus","reproduction",3,"N",0.41236335,1.2025051
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",3,"N",1.192748216,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",3,"N",0.782116254,3.17287195
+"Maron et al. (2004)","Hypericum perforatum","size",3,"N",1.775802871,4.057857125
+"Erfmeier and Bruelheide (2005)","Rhododendron ponticum","size",3,"N",1.108255519,2.768186181
+"Bossdorf et al. (2008)","Senecio inaequidens","size",3,"N",1.385542575,1.87714887
+"Cano et al. (2008)","Senecio pterophorus","size",3,"N",0.586047976,1.2025051
+"Schlaepfer et al. (2010)","Solidago gigantea","size",3,"N",2.569385692,4.128696727
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",3,"N",0.793816703,4.128696727
+"Maron et al. (2004)","Hypericum perforatum","defence",4,"N",1.369113348,3.818792252
+"Schlaepfer et al. (2010)","Solidago gigantea","growth",4,"N",0.707227917,4.128696727
+"Maron et al. (2004)","Hypericum perforatum","physiology",4,"N",1.157185555,3.934186847
+"Cano et al. (2008)","Senecio pterophorus","physiology",4,"N",0.998906267,1.2025051
+"Schlaepfer et al. (2010)","Solidago gigantea","physiology",4,"N",1.490076056,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","reproduction",4,"N",1.468442493,3.17287195
+"Maron et al. (2004)","Hypericum perforatum","reproduction",4,"N",1.411908101,3.934186847
+"Cano et al. (2008)","Senecio pterophorus","reproduction",4,"N",0,1.2025051
+"Schlaepfer et al. (2010)","Solidago gigantea","reproduction",4,"N",0.931734095,4.128696727
+"Bossdorf et al. (2004 - Divers Distrib)","Alliaria petiolata","size",4,"N",1.084086467,3.17287195
+"Maron et al. (2004)","Hypericum perforatum","size",4,"N",1.260310748,3.934186847
+"Bossdorf et al. (2008)","Senecio inaequidens","size",4,"N",1.482689771,1.87714887
+"Schlaepfer et al. (2010)","Solidago gigantea","size",4,"N",2.428462376,4.128696727
+"Schlaepfer et al. (2010)","Solidago gigantea","survival",4,"N",1.345635719,4.128696727

@@ -1,0 +1,9 @@
+  html_document:
+    fig_width: 5
+    fig_height: 3
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: darkly
+    highlight: espresso
+
