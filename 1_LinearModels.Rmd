@@ -117,13 +117,23 @@ We can also estimate error associated with the model:
 
 A simple *linear regression* by ordinary least squares (OLS) for two variables is estimated by the correlation coefficient:
 
-$$b_1 = \frac{\sum_{i=1}^{n}(x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^{n}(x_i - \bar x)}$$
+$$b_1 = \frac{\sum_{i=1}^{n}(x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^{n}(x_i - \bar x)^2}$$
 
 which is equivalent to:
 
 $$b_1 = \frac{COV_{xy}}{V_x}$$
 
-with intercept:
+Because 
+
+$$\frac{COV_{xy}=\sum_{i=1}^{n}(x_i - \bar x)(y_i - \bar y)}{n-1}$$
+
+and 
+
+$$V_x = \frac{\sum_{i=1}^{n}(x_i - \bar x)^2}{n-1}$$
+
+So the denominators cancel out.
+
+The intercept is then estimated by applying $b_1$ to the mean values of $x$ and $y$.
 
 $$b_0 = \bar y - b_1 \bar x $$
 
@@ -529,21 +539,6 @@ The `anova()` function can be used to implement this test on an `lm()` object:
 anova(TestMod1,TestMod2)
 ```
 
-
-**NOTE**: The $t$-statistic in the summary table corresponds to the $F$ statistic for the model with the parameter removed. For example, compare:
-
-```{r}
-TFmod2<-lm(Y ~ X_c + X_f)
-TFmod1<-lm(Y ~ X_c)
-anova(TFmod1,TFmod2)
-```
-
-with the $t$-test in te full model
-
-```{r}
-summary(TFmod2)
-```
-
 # Factors
 
 In our simulated dataset, we encoded a categorical variable (i.e. factor) $X_f$ as 0 or 1. A nice feature of the `lm()` function is that it automatically encodes categorical variables in this way. To demonstrate, let's create a new factor variable $X_fac$ that contains categories "A" and "B":
@@ -574,7 +569,7 @@ $$\bar y_A = b_0 (+ b_2 \times 0)$$
 $$= b_0$$
 
 $$\bar y_B = b_0 (+ b_2 \times 1)$$
-$$= b_2$$
+$$= b_0 + b_2$$
 
 In this case, the *intercept* $b_0$ is the mean for the first level of $X_f$. Adding $b_2$ (the 'Estimate' for X_f) to the intercept yields the mean for group 'B'.
 
@@ -856,10 +851,14 @@ Linear regression will generally out-perform KNN if the linear function is close
 
 KNN can be implemented in R using the `knn.reg()` function from the `FNN` library.
 
+```{r}
+library(FNN)
+```
+
+
 ### $K = 10$ 
 
 ```{r}
-library(FNN)
 trait.knn<-knn.reg(TraitDat$LatSD, y=TraitDat$PC1SD, k=10)
 qplot(TraitDat$PC1SD, trait.knn$pred)+
       xlab("y") + ylab(expression(hat(y)))
