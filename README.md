@@ -17,19 +17,20 @@ Tutorials are written in R Markdown with R Studio.
 
 ## Schedule:
 
-Week | Date | Topic | Presenter 
------|------|-------|----------
-1 | Jan 24 | Linear Models | Rob
-2 | Jan 31 | Classificaion | Ryan
-3 | Feb 7 | Permutation | Rob
-| Feb 14 -- N/A |
-| Feb 21 -- Spring Break |
-4 | Feb 28 | Model Selection | Sam
-5 | Mar 7 | Nonlinear Models | Regan
-| Mar 14 -- N/A | Jaimie
-6 | Mar 21 | Classification Trees | Ryan
-7 | Mar 28 | Support Vector Machines | Rob
-8 | Apr 4 | Clustering Methods | Jaimie
+
+|Week | Date | Topic | Presenter 
+|-----|------|-------|----------
+|1 | Jan 24 | Linear Models | Rob
+|2 | Jan 31 | Classificaion | Ryan
+|3 | Feb 7 | Permutation | Rob
+||Feb 14 | **N/A** |
+||Feb 21 | **Reading Break** |
+|4 | Feb 28 | Model Selection | Sam
+|5 | Mar 7 | Nonlinear Models | Regan
+||Mar 14 | **N/A** |
+|6 | Mar 21 | Classification Trees | Ryan
+|7 | Mar 28 | Support Vector Machines | Rob
+|8 | Apr 4 | Clustering Methods | Jaimie
 
 ## 1. Basic Linear Regression Models (Rob)
 
