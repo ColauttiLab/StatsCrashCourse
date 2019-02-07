@@ -9,7 +9,6 @@ output: html_document
 ###Load Required Libraries
 
 ```{r}
-
 library(plyr)
 library(dplyr)
 library(FSA)
@@ -21,15 +20,6 @@ library(lmtest)
 library(aod)
 library(Amelia)
 library(cvAUC)
-
-```
-
-
-```{r}
-# Set working directory
-
-setwd("~/Course_Development/02_Statistical_Learning/04_Classification/Classification_Methods")
-
 ```
 
 ###Bird introductions to New Zealand
@@ -53,7 +43,7 @@ Data.df
 
 #Only include variables that are numeric or can be made numeric
 
-Data.num = 
+Data.num <- 
    select(Data.df,
           Status, 
           Length,
@@ -310,11 +300,8 @@ According to this procedure, the best model is the one that includes the variabl
 In the final model, it is important to exclude only those observations that have missing values in the variables that are actually included in the final model.  For testing the overall p-value of the final model, plotting the final model, or using the glm.compare function, we will create a data frame with only those observations excluded (i.e., data frame called Data.final).
 
 ```{r}
-
-#library(dplyr)
-
-Data.final = 
-   select(Data,
+Data.final <- 
+   select(Data.num,
           Status,
           Upland, 
           Migr,
@@ -323,7 +310,7 @@ Data.final =
           Insect,
           Wood)
 
-Data.final = na.omit(Data.final)
+Data.final <- na.omit(Data.final)
 
 ```
 
@@ -424,7 +411,7 @@ plot(fitted(model.final),
 #Simple plot of predicted values
  
 Data.final = 
-   select(Data,
+   select(Data.num,
           Status,
           Upland, 
           Migr,
@@ -481,20 +468,17 @@ Iris data:
 
 Goal: predicting iris species based on the predictor variables Sepal.Length, Sepal.Width, Petal.Length, Petal.Width.
 
-
 ```{r}
-
 library(tidyverse)
 library(caret)
 library(klaR)
-
 ```
 
 
 ```{r}
 
-iris.dat<-read.csv("Iris.data.csv", header=T)
-head(iris.dat)
+data(iris)
+head(iris)
 
 ```
 
@@ -508,10 +492,10 @@ To generate a LDA model and evaluate its performance requires the available data
 # Split the data into training (80%) and test set (20%)
 set.seed(123)
 
-training.samples <- iris.dat$species %>% createDataPartition(p = 0.8, list = FALSE)
+training.samples <- iris$Species %>% createDataPartition(p = 0.8, list = FALSE)
 
-train.data <- iris.dat[training.samples, ]
-test.data <- iris.dat[-training.samples, ]
+train.data <- iris[training.samples, ]
+test.data <- iris[-training.samples, ]
 
 
 ```
@@ -540,7 +524,7 @@ test.transformed <- preproc.param %>% predict(test.data)
 ```{r}
 
 library(MASS)
-model.lda <- lda(species~., data = train.transformed)
+model.lda <- lda(Species~., data = train.transformed)
 model.lda
 
 ```
@@ -566,7 +550,7 @@ Linear discriminants are plotted using values of LD1 and LD2 for each of the tra
 ```{r}
 
 lda.data <- cbind(train.transformed, predict(model.lda)$x)
-ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = species))
+ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = Species))
 
 ```
 
@@ -574,7 +558,7 @@ As you can see, there are three distinct groups with some overlap between virgin
 
 ###One-dimensional plot of linear discriminants
 
-```{r}
+```{r, fig.width=6, fig.height=18}
 
 plot(model.lda, dimen = 1, type = "b")
 
@@ -589,7 +573,7 @@ An alternate way to plot the linear discriminant functions is to produce an arra
 
 ```{r}
 
-partimat(species ~ s.length + s.width + p.length + p.width, data=train.transformed, method="lda")
+partimat(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data=train.transformed, method="lda")
 
 
 ```
@@ -602,7 +586,7 @@ A confusion matrix can be used to assess the prediction accuracy of a LDA model.
 
 lda.train <- predict(model.lda)
 train.transformed$lda <- lda.train$class
-table(train.transformed$lda,train.transformed$species)
+table(train.transformed$lda,train.transformed$Species)
 
 ```
 
@@ -617,7 +601,7 @@ The test set is run against the model to determine its accuracy.
 
 lda.test <- predict(model.lda,test.transformed)
 test.transformed$lda <- lda.test$class
-table(test.transformed$lda,test.transformed$species)
+table(test.transformed$lda,test.transformed$Species)
 
 ```
 
@@ -630,7 +614,7 @@ You can compute the overall model accuracy (x100).
 
 ```{r}
 
-mean(predictions$class==test.transformed$species)
+mean(lda.test$class==test.transformed$Species)
 
 ```
 
@@ -675,24 +659,24 @@ Quadratic discriminant analysis is a modification of LDA that does not assume eq
 #library(MASS)
 
 # Fit the model
-model.qda <- qda(species~s.length+s.width+p.length+p.width, data = train.transformed)
+model.qda <- qda(Species~Sepal.Length+Sepal.Width+Petal.Length+Petal.Width, data = train.transformed)
 model.qda
 
 # Make predictions
 predictions.qda <- model.qda %>% predict(test.transformed)
 
 # Model accuracy
-mean(predictions.qda$class == test.transformed$species)
+mean(predictions.qda$class == test.transformed$Species)
 
 ```
 
-###QDA Partition Plots
+### QDA Partition Plots
 
 Plotting the the quadratic discriminant functions using partition plots provides a good way visualize the difference between the linear functions used in LDA and the quadratic functions used in QDA. The colored regions delineate each classification area. Observations that fall within a region is predicted to be from that specific class. Each plot also includes the apparent error rate for that view of the data.
 
 ```{r}
 
-partimat(species~s.length+s.width+p.length+p.width, data = train.transformed, method="qda")
+partimat(Species~Sepal.Length+Sepal.Width+Petal.Length+Petal.Width, data = train.transformed, method="qda")
 
 ```
 
@@ -704,7 +688,7 @@ The predict function works exactly the same way as before and can be used to cre
 
 qda.train <- predict(model.qda)
 train.transformed$qda <- qda.train$class
-table(train.transformed$qda,train.transformed$species)
+table(train.transformed$qda,train.transformed$Species)
 
 ```
 
@@ -719,7 +703,7 @@ The test set is run against the model to determine its accuracy.
 
 qda.test <- predict(model.qda,test.transformed)
 test.transformed$qda <- qda.test$class
-table(test.transformed$qda,test.transformed$species)
+table(test.transformed$qda,test.transformed$Species)
 
 ```
 
@@ -733,7 +717,7 @@ KNN is a non-parametric supervised learning technique in which we try to classif
 
 ```{r}
 
-head(iris.dat)
+head(iris)
 
 ```
 
@@ -744,7 +728,7 @@ When independent variables in training data are measured in different units, it 
 ```{r}
 
 ##Generate a random number that is 80% of the total number of rows in dataset.
- ran <- sample(1:nrow(iris.dat), 0.8 * nrow(iris.dat)) 
+ ran <- sample(1:nrow(iris), 0.8 * nrow(iris)) 
  
  ##the normalization function is created
  nor <-function(x) { 
@@ -752,7 +736,7 @@ When independent variables in training data are measured in different units, it 
    }
  
  ##Run nomalization on first 4 coulumns of dataset because they are the predictors
- iris_norm <- as.data.frame(lapply(iris.dat[,c(2,3,4,5)], nor))
+ iris_norm <- as.data.frame(lapply(iris[,-5], nor))
  
  summary(iris_norm)
 
@@ -814,14 +798,14 @@ plot.df = data.frame(iris_test, predicted = fit)
 # Sepal.Length vs Sepal.Width
 
 # First use Convex hull to determine boundary points of each cluster
-plot.df1 = data.frame(x = plot.df$s.length, 
-                      y = plot.df$s.width, 
+plot.df1 = data.frame(x = plot.df$Sepal.Length, 
+                      y = plot.df$Sepal.Width, 
                       predicted = plot.df$predicted)
 
 find_hull = function(df) df[chull(df$x, df$y), ]
 boundary = plyr::ddply(plot.df1, .variables = "predicted", .fun = find_hull)
 
-ggplot(plot.df, aes(s.length, s.width, color = predicted, fill = predicted)) + 
+ggplot(plot.df, aes(Sepal.Length, Sepal.Width, color = predicted, fill = predicted)) + 
   geom_point(size = 5) + 
   geom_polygon(data = boundary, aes(x,y), alpha = 0.5)
 ```
