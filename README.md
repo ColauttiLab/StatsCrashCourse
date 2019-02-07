@@ -16,17 +16,21 @@ Tutorials are written in R Markdown with R Studio.
 
 ## 1. Basic Linear Regression Models (Rob)
 
-Introduction to linear models: (1_LinearModels.html)[1_lm.html] 
+Introduction to linear models: [1_LinearModels.html](./1_LinearModels.html) 
 
 ## 2. Classification (Ryan)
 
+Classification models: [2_Classification.html](./2_Classification.html)
+
 ## 3. Resampling Methods (Rob)
+
+Bootstrap and permutation models: [3_Permutations.html](./3_Permutations.html)
 
 ## 4. Linear Model Selection (Sam)
 
 ## 5. Nonlinear Regression Models (Regan)
 
-## 6. Tree-based Classification (Sam)
+## 6. Tree-based Classification (Ryan)
 
 ## 7. Support Vector Machines (Rob)
 
