@@ -12,7 +12,24 @@ Tutorials are written in R Markdown with R Studio.
 4. Set a local directory and link to the GitHub site: https://github.com/ColauttiLab/StatsCrashCourse
 5. Email robert.colautti -->at<-- Queensu.ca with your github user name for writing privileges.
 
+
 # Lessons:
+
+## Schedule:
+
+Week | Date | Topic | Presenter 
+-----|------|-------|----------
+1 | Jan 24 | Linear Models | Rob
+2 | Jan 31 | Classificaion | Ryan
+3 | Feb 7 | Permutation | Rob
+| Feb 14 -- N/A |
+| Feb 21 -- Spring Break |
+4 | Feb 28 | Model Selection | Sam
+5 | Mar 7 | Nonlinear Models | Regan
+| Mar 14 -- N/A | Jaimie
+6 | Mar 21 | Classification Trees | Ryan
+7 | Mar 28 | Support Vector Machines | Rob
+8 | Apr 4 | Clustering Methods | Jaimie
 
 ## 1. Basic Linear Regression Models (Rob)
 
@@ -35,4 +52,7 @@ Bootstrap and permutation models: [3_Permutations.html](./3_Permutations.html)
 ## 7. Support Vector Machines (Rob)
 
 ## 8. Clustering Methods (Jaimie)
+
+
+
 
