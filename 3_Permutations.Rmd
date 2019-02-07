@@ -1,0 +1,382 @@
+---
+title: "Basic Linear Regression Models"
+author: "Robert I. Colautti"
+output: html_document
+---
+
+```{r, echo=F}
+source("theme_pub.R")
+library(ggplot2); theme_set(theme_pub())
+```
+
+# Introduction
+
+This tutorial covers bootstrap, permutation and cross-validation. 
+
+
+# Bootstrap 
+
+## Basics
+
+A bootstrap model gets its name from the old 19th century expression to "lift yourself up by your own bootstraps", as a metaphor for accomplishing a task without external forces. In the context of data analysis, the term bootstrap refers to the generation of 'new' data from existing data. 
+
+A very common use of a bootstrap model is to generate a null distribution from the data, to test whether the observed mean or variance is different than what we would expect by chance.
+
+You may not realize it, but you have already taken the first step towards a bootstrap model in R by using the `sample()` function. 
+
+Let's look at the data from the Global Garlic Mustard Field Survey. The data are available [here](https://colauttilab.github.io/EcologyTutorials/GGMFS_Teaching_Data.csv). Details on this dataset are covered in a [tutorial introducting climate models(https://colauttilab.github.io/EcologyTutorials/GGMFS_climate.html).
+```{r}
+GMdat<-read.csv("GGMFS_Teaching_Data.csv",header=T)
+GMsubDat<-GMdat[,c("Longitude","Latitude","Region","Pop_Size")] # Subset to columns of interest
+GMsubDat<-GMsubDat[complete.cases(GMsubDat),] # Remove missing data
+```
+
+## Parametric Assumptions
+
+Let's calculate the __Mean__ and __95% CI__ for `Pop_Size`. In classic frequentist statistics, we might assume a normal distribution, and then calculate the __Mean__ and __Standard Error (SE)__. You may recall from intro stats that the mean of a random sample drawn from a Gaussian distribution will fall within ~1.96x the standard error of the mean, 95% of the time. This is a complicated way of saying that the parametric 95% CI of a random sample is Mean +/- 1.96*SE. You may also recall that the SE of a sample mean is __Standard Deviation (SD)__ divided by the square root of the sample size: 
+
+$\frac{SD}{\sqrt{(N-1)}}$
+
+```{r}
+# Calculate mean, SE and CI from parametric model
+X<-mean(GMsubDat$Pop_Size)
+SE<-sd(GMsubDat$Pop_Size)/sqrt(nrow(GMsubDat)-1)
+CI<-c(X-SE*1.96,X+SE*1.96)
+
+# Round and print values
+X<-round(X)
+CI<-round(CI)
+paste("Raw mean is:",X)
+paste("Raw 95% CI is:",CI[1],"to",CI[2])
+```
+
+This assumes a normal distribution Let's take a look at the distribution of `Pop_Size`, and then add the mean and 95% CI
+```{r}
+library(ggplot2)
+qplot(Pop_Size,data=GMsubDat)+theme_bw()+geom_vline(aes(xintercept=X),colour="red")+geom_vline(aes(xintercept=CI[1]),colour="blue")+geom_vline(aes(xintercept=CI[2]),colour="blue")
+```
+
+The data highly right-skewed, ranging from near-zero to almost 1,000,000. They are clearly not normal, violating the assumption of the parametric estimate.
+
+> How can we reduce the skew and improve assumptions of normality in the data?
+
+## Transform
+
+We can try to apply a transformation to make the data look more like a normal distribution:
+```{r}
+# Calculate mean and 95% CI on transformed data
+GMsubDat$log_Size<-log(GMsubDat$Pop_Size)
+Xlog<-mean(GMsubDat$log_Size)
+SElog<-sd(GMsubDat$log_Size)/sqrt(nrow(GMsubDat)-1)
+CIlog<-c(Xlog-SElog*1.96,Xlog+SElog*1.96)
+
+# Plot data + mean + 95% CI
+qplot(log_Size,data=GMsubDat)+theme_bw()+geom_vline(aes(xintercept=Xlog),colour="red")+geom_vline(aes(xintercept=CIlog[1]),colour="blue")+geom_vline(aes(xintercept=CIlog[2]),colour="blue")
+```
+
+Much better, but still a bit skewed. Let's back-transform the mean and CI calculated on the log-transformed data, and compare with the original
+```{r}
+# Original
+cat("Raw mean is:",X,"\n",
+    "Raw 95% CI is:",CI[1],"to",CI[2],"\n")
+
+# Back-Transform from log-scale to original measurement scale
+Xlog<-exp(Xlog)
+CIlog<-exp(CIlog)
+
+# Round 
+Xlog<-round(Xlog)
+CIlog<-round(CIlog)
+cat("Transformed mean is:",Xlog,"\n",
+    "Transformed 95% CI is:",CIlog[1],"to",CIlog[2],"\n")
+```
+
+Compare the raw vs. log-transformed values. That's more than an order of magnitude difference in the mean, and a much smaller 95% CI!
+
+## Bootstrap Mean
+
+We can also use a bootstrap model estimate the mean and 95% CI directly from the data. The beauty of this approach is that it is not biased by the distribution of the data. To do this we:
+
+  1. Resample the data, with replacement
+  2. Calculate the mean 
+  3. Repeat N times
+  4. Calculate the mean of the N replicated sample means. This is the __bootstrap mean__.
+  5. The 0.025*Nth smallest mean is the lower 95% CI
+  6. The 0.975*Nth smallest mean is the upper 95% CI
+
+We can do this fairly easily in R using `sample()` in a `for` loop and saving the output in a vector
+
+```{r}
+Iters<-999 # Number of iterations == the number ot times the mean is resampled 
+BootOut<-rep(NA,Iters) # Make an empty vector with # cells = number of iterations
+for (i in 1:Iters){
+  # Resample the data, calculate the mean, and save it in a vector; repeat
+  BootOut[i]<-mean(sample(GMsubDat$Pop_Size,nrow(GMsubDat),replace=T)) 
+}
+head(BootOut)
+```
+
+Now calculate the mean and CI from the sorted data (steps 4-6). Note that the values are drawn directly from the data.
+```{r}
+Xboot<-mean(BootOut)
+CIlow<-sort(BootOut)[floor(length(BootOut)*0.025)] # Lower 2.5% CI
+CIhigh<-sort(BootOut)[ceiling(length(BootOut)*0.975)] # Upper 2.5% CI
+CIboot<-c(CIlow,CIhigh)
+```
+
+Plot for comparison. 
+```{r}
+# Plot
+qplot(BootOut)+theme_bw()+geom_vline(aes(xintercept=Xboot),colour="red")+geom_vline(aes(xintercept=CIlow),colour="blue")+geom_vline(aes(xintercept=CIhigh),colour="blue")
+```
+
+> Why does the 95% CI seem so much wider on this plot than the previous two?
+
+This is a plot of estimated population means from the bootstrap iterations, whereas the previous graphs plot the raw data. Therefore the x-axis scales are quite different.
+
+## Compare methods
+
+Let's look at all of them together:
+```{r}
+# Transform bootstrap values
+Xboot<-round(Xboot)
+CIboot<-round(CIboot)
+
+cat("Raw mean is:",X,"\n",
+    "Raw 95% CI is:",CI[1],"to",CI[2],"\n",
+    "Transformed mean is:",Xlog,"\n",
+    "Transformed 95% CI is:",CIlog[1],"to",CIlog[2],"\n",
+    "Bootstrap mean is:",Xboot,"\n",
+    "Bootstrap 95% CI is:",CIboot[1],"to",CIboot[2],"\n")
+```
+
+> Which method is most accurate and why?
+
+## Bootstrap: Effect Size
+
+We can also use a bootstrap simulation as a non-parametric statistic. In the dataset on _Alliaria petiolata_ (garlic mustard) from the Global Garlic Mustard Field Survey there is a factor called __Region__, which tells us which continent the population is on. Let's test if the North American populations are larger than populations in Europe.
+
+## Parametric Models
+
+```{r}
+# Raw data
+RawMod<-lm(Pop_Size~Region,data=GMsubDat)
+(RawCoef<-summary(RawMod)$coefficients)
+
+# Log-transformed
+LogMod<-lm(log_Size~Region,data=GMsubDat)
+(LogCoef<-summary(LogMod)$coefficients)
+```
+
+Recall: The 'RegionNorthAm' parameter is the estimated difference in the mean of North American population size relative to Europe. The 2nd model is on a log-scale so it needs to be back-transformed.
+```{r}
+# Calculate effect size and parametric 95%CI, and round
+RawES<-round(RawCoef[2])
+RawCI<-round(c(RawCoef[2]-1.96*RawCoef[4],RawCoef[2]+1.96*RawCoef[4]))
+
+# Calculate for log-transformed
+LogES<-exp(LogCoef[2])
+LogES<-round(LogES)
+LogCI<-exp(c(LogCoef[2]-1.96*LogCoef[4],LogCoef[2]+1.96*LogCoef[4]))
+LogCI<-round(LogCI)
+
+cat("The effect size based on raw data is:",RawES,"\n",
+    "with parametric 95% CI of",RawCI[1],"to",RawCI[2],"\n",
+    "The effect size based on transformed data is:","\n",
+    LogES,"with parametric 95% CI of",LogCI[1],"to",LogCI[2],"\n")
+```
+
+> What does the range of CI values tell you about the hypothesis that introduced populations (North America) are larger than populations in the native range (Europe)?
+
+## A Bootstrap model
+
+We sample, with replacement, just as we did with the above bootstrap model. However, this time we sample separately for each region and calculate the difference in the mean each time
+
+  1. Resample the data __from each region__, with replacement
+  2. Calculate the __difference between means__ 
+  3. Repeat N times
+  4. Calculate the mean of the N replicated samples. This is the __bootstrap effect size__.
+  5. The 0.025*Nth smallest mean is the lower 95% CI
+  6. The 0.975*Nth smallest mean is the upper 95% CI
+
+```{r}
+Iters<-999 # Number of iterations == the number ot times the mean is resampled 
+BootESOut<-rep(NA,Iters) # Make an empty vector with # cells = number of iterations
+# Make separate EU/NA groups for resampling
+EUpops<-GMsubDat$Pop_Size[grep("Europe",GMsubDat$Region)]
+NApops<-GMsubDat$Pop_Size[grep("NorthAm",GMsubDat$Region)]
+for (i in 1:Iters){
+  # Resample the data, calculate the mean, and save it in a vector; repeat
+  BootESOut[i]<-
+    mean(sample(NApops,length(NApops),replace=T)) -
+    mean(sample(EUpops,length(EUpops),replace=T))
+}
+head(BootESOut)
+```
+
+Look at the frequency histogram. 
+```{r}
+qplot(BootESOut)+theme_bw()
+```
+
+Compare the results
+
+```{r}
+# Calculate mean & 95% CI
+XbootES<-round(mean(BootESOut))
+CIlowES<-sort(BootESOut)[floor(length(BootESOut)*0.025)] # Lower 2.5% CI
+CIhighES<-sort(BootESOut)[ceiling(length(BootESOut)*0.975)] # Upper 2.5% CI
+CIbootES<-round(c(CIlow,CIhigh))
+
+# Compare results
+cat("The effect size based on raw data is:",RawES,"\n",
+    "with parametric 95% CI of",RawCI[1],"to",RawCI[2],"\n",
+    "The effect size based on transformed data is:",LogES,"\n",
+    "with parametric 95% CI of",LogCI[1],"to",LogCI[2],"\n",
+    "The effect size of the bootstrap model is:",XbootES,"\n",
+    "with 95% CI of",CIbootES[1],"to",RawCI[2],"\n")
+```
+
+> What do the x- and y-axis represent, and why does the distribution have this shape?
+
+## Bootstrap Null Models
+
+In the above model, we know our effect size is significant -- i.e. North American populations are significantly bigger than native populations. But, there are two problems:
+
+  1. We don't know the exact P-value. 
+  2. The above model wouldn't work for __constrained data__. For example, what if we wanted to test the significance of eigenvalues from a principal components model? Eigenvalues are __constrained__ to be greater than zero. Since we calculate 95% CI from resampled data, rather than a parametric model, we can't just check if our 95% CI overlap zero.
+  
+Here's where a null model comes in handy. We first define and simulate a null model, then compare our observed value(s) to the null model.
+
+Defining the null model is a little more tricky -- you have to think in terms of the null hypothesis. In our example, the null hypothesis is that there is no difference in the size of European and North American populations. To generate a null distribution:
+
+  1. Resample the __region codes__, __with replacement__
+  2. Calculate the __difference between means__ 
+  3. Repeat N times
+  4. Compare the observed effect size to the null distribution
+  5. The p-value is proportion of values in the null model greater/less than the observed effect size (or divide by 2 for a 2-tailed test)
+  
+```{r}
+Iters<-999 # Number of iterations == the number ot times the mean is resampled 
+PermOut<-rep(NA,Iters) # Make an empty vector with # cells = number of iterations
+SimDat<-GMsubDat # Make a new dataset for resampling
+for (i in 1:Iters){
+  # 1. Reshuffle Region labels (sample, without replacement)
+  SimDat$Region<-sample(SimDat$Region,replace=F)
+  # 2. Calculate effect size and save in output vector
+  PermOut[i]<-
+    mean(SimDat$Pop_Size[grep("NorthAm",SimDat$Region)]) -
+    mean(SimDat$Pop_Size[grep("Europe",SimDat$Region)])
+}
+head(PermOut)
+```
+
+## Plot Null
+
+```{r}
+# Calculate mean difference of raw data
+(RawX<-aggregate(GMsubDat$Pop_Size,list(GMsubDat$Region),mean))
+RawDiff<-RawX$x[2]-RawX$x[1]
+qplot(PermOut)+theme_bw()+geom_vline(aes(xintercept=RawDiff),colour="red")
+```
+
+## Calculate p-value
+
+The p-value is the probability of obtaining the observed value by chance. In this case the observed value is the observed difference in the mean `RawDiff`, above. The null model simulates 'observed values obtained by chance'. So the estimated p-value is the proportion of values less than the observed value __for a 1-tailed test__.
+
+```{r}
+p<-sum(PermOut>RawDiff)/length(PermOut)
+paste("The estimated p-value is:",p)
+```
+
+If the observed value is lower than all of the simulated values, then the best we can say is: 
+$$p < \frac{1}{N_{iters}}$$ 
+    
+where `Niters` is the total number of iterations. 
+
+If we did not have an _a priori_ prediction about the direction of the effect, then it is a 2-tailed test. This is easy to do. We just divide alpha by two, or multiply the p-value by 2.
+
+In our case, our null hypothesis was no difference between European vs. North American populations (rather than testing whether North American populations are bigger).
+
+So p < 0.01 for 1001 iterations or p < 0.001 if there is no overlap in 2001 iterations.
+
+## Bootstrap Caveats
+
+It's important to think carefully about your bootstrap and null models and the implicit assumptions you make when you run them. For example, we assume that each observation has the same probability of being chosen in each iteration. This wouldn't be true if there was some sort of inherent correlation among data points. For example, the data we are working with were sampled non-randomly.
+```{r}
+qplot(Longitude,Latitude,data=GMdat,alpha=I(0.3))+theme_bw()
+```
+
+We may also have two or more factors in a model that are correlated. For example, multiple traits measured on the same individuals or the same traits measured on the same individuals but at different time points. In this kind of 'repeated measures' experiments, should run the bootstrap and null model tests at the level of individual, not observation. That is, reshuffle ID tags for a null model, leaving the rest of the row/column data untouched.
+
+## Make it faster
+
+Once you understand the basic coding for bootraps and permutation tests, you can look into available packages to reduce the amount of code you need to write and have them run faster. 
+
+The `lmPerm` package is the permutation equivalent of `lm()`
+
+The `boot` package has tools for writing bootstrap models
+
+The `foreach` and `doParallel` packages allow you to use multithreading in your functions and for-loops.
+
+
+# Cross-validation
+
+In contrast to the bootstrap, which resamples data, cross-validation provides an alternative approach that is not as computationally demanding. Rather than resampling randomly, in each iteration, k rows of data (typically k=5 or k=10) are removed from the dataset in each iteration. 
+
+Cross-validation is useful for identifying the best-fit statistical models while avoiding over-fitting. The `cv.glm` function from the `boot` package does this quickly:
+
+```{r}
+library(boot)
+mod1<-glm(Pop_Size~Latitude*Region,data=GMsubDat)
+summary(mod1)
+cv.err<-cv.glm(GMsubDat,mod1)
+cv.err$K
+cv.err$delta
+```
+
+Our `cv.err$delta` parameters are the Cross-Validation estimates of the model Mean Squared Error (MSE), which is just an average of the individual model MSEs:
+
+$CV = \frac{\sum_{i=1}^k MSE_i}{k}$
+
+Where MSE is just the average squared deviation of each point $y_i$ from the model prediction $\hat f(x_i)$ :
+
+$MSE = \frac{\sum_{i=1}^n [(y_i - f(x_i)]^2}{n}$
+
+We can try higher-order polynomials with the continuous term (Latitude)
+
+```{r}
+library(boot)
+Plvl<-8
+cv.err<-rep(NA,Plvl)
+for (i in 1:Plvl){
+  mod1<-glm(Pop_Size~poly(Latitude,i),data=GMsubDat)
+  cv.err[i]<-cv.glm(GMsubDat,mod1)$delta[1]
+  mod1<-NA  
+}
+cv.err
+qplot(x=1:Plvl,cv.err)
+```
+
+And include interactions of each polynomial with Region:
+
+```{r}
+library(boot)
+Plvl<-8
+cv.err<-rep(NA,Plvl)
+for (i in 1:Plvl){
+  mod1<-glm(Pop_Size~poly(Latitude,i)*Region,data=GMsubDat)
+  cv.err[i]<-cv.glm(GMsubDat,mod1)$delta[1]
+  mod1<-NA  
+}
+cv.err
+qplot(x=1:Plvl,cv.err)
+```
+
+# Assignment
+
+Analyze a biological dataset to address any biological question (ideally one of your own or from your lab). Analyze the data using `glm()` with at least one continuous (i.e. numeric) predictor variable. Use a cross-validation approach to determine the 'best' mode. Write a short report using R markdown that explains your approach (methods), hypothesis, and inference.
+
+
+
+
