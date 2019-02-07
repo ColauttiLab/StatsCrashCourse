@@ -53,7 +53,7 @@ paste("Raw 95% CI is:",CI[1],"to",CI[2])
 This assumes a normal distribution Let's take a look at the distribution of `Pop_Size`, and then add the mean and 95% CI
 ```{r}
 library(ggplot2)
-qplot(Pop_Size,data=GMsubDat)+theme_bw()+geom_vline(aes(xintercept=X),colour="red")+geom_vline(aes(xintercept=CI[1]),colour="blue")+geom_vline(aes(xintercept=CI[2]),colour="blue")
+qplot(Pop_Size,data=GMsubDat)+geom_vline(aes(xintercept=X),colour="red")+geom_vline(aes(xintercept=CI[1]),colour="blue")+geom_vline(aes(xintercept=CI[2]),colour="blue")
 ```
 
 The data highly right-skewed, ranging from near-zero to almost 1,000,000. They are clearly not normal, violating the assumption of the parametric estimate.
@@ -71,7 +71,7 @@ SElog<-sd(GMsubDat$log_Size)/sqrt(nrow(GMsubDat)-1)
 CIlog<-c(Xlog-SElog*1.96,Xlog+SElog*1.96)
 
 # Plot data + mean + 95% CI
-qplot(log_Size,data=GMsubDat)+theme_bw()+geom_vline(aes(xintercept=Xlog),colour="red")+geom_vline(aes(xintercept=CIlog[1]),colour="blue")+geom_vline(aes(xintercept=CIlog[2]),colour="blue")
+qplot(log_Size,data=GMsubDat)+geom_vline(aes(xintercept=Xlog),colour="red")+geom_vline(aes(xintercept=CIlog[1]),colour="blue")+geom_vline(aes(xintercept=CIlog[2]),colour="blue")
 ```
 
 Much better, but still a bit skewed. Let's back-transform the mean and CI calculated on the log-transformed data, and compare with the original
@@ -127,7 +127,7 @@ CIboot<-c(CIlow,CIhigh)
 Plot for comparison. 
 ```{r}
 # Plot
-qplot(BootOut)+theme_bw()+geom_vline(aes(xintercept=Xboot),colour="red")+geom_vline(aes(xintercept=CIlow),colour="blue")+geom_vline(aes(xintercept=CIhigh),colour="blue")
+qplot(BootOut)+geom_vline(aes(xintercept=Xboot),colour="red")+geom_vline(aes(xintercept=CIlow),colour="blue")+geom_vline(aes(xintercept=CIhigh),colour="blue")
 ```
 
 > Why does the 95% CI seem so much wider on this plot than the previous two?
@@ -216,7 +216,7 @@ head(BootESOut)
 
 Look at the frequency histogram. 
 ```{r}
-qplot(BootESOut)+theme_bw()
+qplot(BootESOut)
 ```
 
 Compare the results
@@ -277,7 +277,7 @@ head(PermOut)
 # Calculate mean difference of raw data
 (RawX<-aggregate(GMsubDat$Pop_Size,list(GMsubDat$Region),mean))
 RawDiff<-RawX$x[2]-RawX$x[1]
-qplot(PermOut)+theme_bw()+geom_vline(aes(xintercept=RawDiff),colour="red")
+qplot(PermOut)+geom_vline(aes(xintercept=RawDiff),colour="red")
 ```
 
 ## Calculate p-value
@@ -304,7 +304,7 @@ So p < 0.01 for 1001 iterations or p < 0.001 if there is no overlap in 2001 iter
 
 It's important to think carefully about your bootstrap and null models and the implicit assumptions you make when you run them. For example, we assume that each observation has the same probability of being chosen in each iteration. This wouldn't be true if there was some sort of inherent correlation among data points. For example, the data we are working with were sampled non-randomly.
 ```{r}
-qplot(Longitude,Latitude,data=GMdat,alpha=I(0.3))+theme_bw()
+qplot(Longitude,Latitude,data=GMdat,alpha=I(0.3))
 ```
 
 We may also have two or more factors in a model that are correlated. For example, multiple traits measured on the same individuals or the same traits measured on the same individuals but at different time points. In this kind of 'repeated measures' experiments, should run the bootstrap and null model tests at the level of individual, not observation. That is, reshuffle ID tags for a null model, leaving the rest of the row/column data untouched.
