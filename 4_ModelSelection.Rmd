@@ -1,0 +1,485 @@
+---
+title: "Model Selection Tutortial - Patterson"
+author: "Samuel Patterson"
+date: "February 19, 2019"
+output: html_document
+---
+
+```{r setup 1, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Lets load the pack    **tidyverse** data manipulation/visulation        **leaps** model selection fucntions  
+```{r setup, include=TRUE}
+library(tidyverse)
+library(leaps)
+library(ISLR)
+library(glmnet)
+```
+Load the data...      
+
+We will be working with a data set called **Hitters**, a data set contains the batting averages and variables assocaited with hitting at bat    
+
+
+```{r pressure, echo=TRUE}
+(
+  hitters <- na.omit(ISLR::Hitters) %>%
+    as_tibble
+  )
+```
+#Best Subset Selection 
+* Fit least squares regression for each possible combination of the p predictors
+* Fit all p models to have exatcly one p or predictor, exatcly 2 p or predictors and so on....
+* Then use repo to identify best model and fit 
+* 3 stage process - best subset selction includes: 
+
+1. Let M0 denote the null model - no predictor variables. Only sample mean for each observation. 
+
+2. For K=1,2,3....p
++ Fit all (p/k) models that contain exatcly k predictors
++ pick the best among the models, and dub this model Mk - best being defined as the smallest RSS or largest R2 
+
+3. Select a single best model from among the null and Mp models using the cross-validated error, Cp, AIC, BIC or adjusted R2
+ 
+-----------------------------
+* Preform best subset search using the regsubsets (part of the leaps library)
+* This will identify the best model for a given number of k predictors where best is quantified using RSS
+* The syntax is the same as the lm fucntion 
+* By deafult regsubsets only reports results up to the best eight variable model
+* nvmax option can be paired to return as many variables as desired 
+* we will fit 19 variables to this model for example
+
+
+```{r subsets, echo=TRUE}
+best_subset <- regsubsets(Salary ~ ., hitters, nvmax=19)
+```
+
+The 'subsets' function returns a list-object. Initaly we can use 'summary' to view and assess all of the models selected for each p size.          
+* The best 1 variable model is 'salary ~ CRBI', the best 2 variable model is 'Salary ~ CRBI + Hits', best 3 variable model 'Salary ~ CRBI + Hits + PutOuts. 
+
+```{r summary of models, echo=TRUE}
+summary(best_subset)
+```
+
+#Stepwise selection - Drawbacks of best Subset
+* Best subset method suffers from statistical problems when p is to large 
+* the more variables increases the chane of having a model preform to well on trainning data - while having low predictive effect on future data
+* thus many variables can lead to overfitting 
+* stepwise is an attractive alternative as you can control the number of models generated more easily 
+#Forward Stepwise 
+
+* the null model again contains no predictors and adds predictor terms one step at a time
+* each addition of a predictor that adds additonal improvment to the model is fitted in a stepwise manner
+* 3 Steps
+1. Let M0 denote the null model, which contains no predictors. this model simply predicts the sample mean for each observation. 
+2. For k = 0,..., p-1 
++ Consider all p - k models that augment the preditors in Mk with one additional predictor
++ Choose the best among these p-k models, and call it Mk+1
++here the best fit is defined as having the smallest RSS or highest R2 
+3. Select the single best model from among M0,....,Mp using cross-validated predicition error, Cp,AIC,BIC or Adjusted R2
+
+**Preform forward slection using 'regsubsets' by inclduing the term 'method="forward"' 
+
+```{r forward selection, echo=TRUE}
+forward <- regsubsets(Salary ~ ., hitters, nvmax = 19, method = "forward")
+```
+
+#Backward selection 
+* The same basic function as forward selection 
+* Main Diff: For K = p,p-1,...,1
+* All k models that contain all but one of the predictors in Mk for a total of K-1 predictors
+* Choose the best among the k models, and call it Mk-1
+* Again using 'regsubsets', with 'method = "backwards"'
+```{r backward selection, echo=TRUE}
+backward <- regsubsets(Salary ~ ., hitters, nvmax = 19, method = "backward")
+```
+
+# Comparing Models 
+* First we need to indetify the test error associated with each model 
+1. Indirectly estimate the test error by making an adjustment to the trainning error to account for the bias due to overfitting
+2. We can directly estimate the test error using either a validation set approach or a cross-validation approach
+
+** R2 and MSE should not be used for model selection as the results of these test statistics is proportional to the numbe rof preodctors and is not accurate to the fit of the model in this case**
+
+**Cp, AIC, BIC and adjusted R2 values all are corrected for model selection as they add a penatly to the models that add extra predictors**    
+**Models with a higher number of preidctors will be peanlized to a greater degree than those with fewer**
+
+#Output of Regsubsets 
+
+* All of theese indicator values are storred in the fucntion regsubsets
+* To extract this information and plot them...
+
+```{r Training data, echo=TRUE}
+#creating training data for model 
+set.seed(1)
+sample <- sample(c(TRUE, FALSE), nrow(hitters), replace = T, prob = c(0.6,0.4))
+train <- hitters[sample, ]
+test <- hitters[!sample, ]
+```
+
+```{r Best Subset Selection, echo=TRUE}
+#Preform best subset selection
+best_subset <- regsubsets(Salary ~ ., train, nvmax = 19)
+results <- summary(best_subset)
+```
+
+```{r Extract and plot results, echo=TRUE,include=TRUE}
+#Extract and Plot Results
+tibble(predictors = 1:19,
+       adj_R2 = results$adjr2,
+       Cp = results$cp,
+       BIC = results$bic) %>%
+  gather(statistic, value, -predictors) %>%
+  ggplot(aes(predictors, value, color = statistic)) +
+  geom_line(show.legend = F) +
+  geom_point(show.legend = F) +
+  facet_wrap(~ statistic, scales = "free")
+```
+
+**Notice that the adj. R2 value is a maximum error method while AIC, BIC and Cp are minimal error methods**
+
+```{r Variable suggestions, echo=TRUE,include=TRUE}
+which.max(results$adjr2)
+which.min(results$bic)
+which.min(results$cp)
+```
+**All of theese indicator values suggest a diffrent model to be selected. The R2 suggests 10 variable model, the BIC statsitic suggests the 4 variable and the Cp value suggest the 8 variable model**
+
+* can compare the variables and coeffecients that theese models include using the coef function
+
+```{r coef function 10, echo=TRUE,include=TRUE}
+coef(best_subset, 10)
+```
+```{r coef function 4, echo=TRUE,include=TRUE}
+coef(best_subset, 4)
+```
+
+```{r coef function 8, echo=TRUE,include=TRUE}
+coef(best_subset, 8)
+```
+
+#Preform forward & backward slection again and compare terms 
+
+```{r coef function, echo=TRUE,include=TRUE}
+
+forward <- regsubsets(Salary ~ ., train, nvmax = 19, method = "forward")
+backward <- regsubsets(Salary ~ ., train, nvmax = 19, method = "backward")
+
+```
+
+```{r coef function 1, echo=TRUE,include=TRUE}
+
+# which models minimize Cp?
+which.min(summary(forward)$cp)
+## [1] 8
+which.min(summary(backward)$cp)
+## [1] 8
+
+```
+**Notice that both the forward and backward method both produced models with 8 variables - lets inspect the components that each method selected**
+
+
+```{r coef 1, echo=TRUE,include=TRUE}
+
+coef(best_subset, 8)
+
+```
+
+```{r coef 2, echo=TRUE,include=TRUE}
+
+coef(forward, 8)
+
+```
+
+```{r coef function 2, echo=TRUE,include=TRUE}
+
+coef(backward, 8)
+
+```
+
+
+**All models include AtBats, Hits, Walks, Cwalks, and PutOuts, but there are unqiue variables in each model**
+
+This highlights the diffrences between the two forward and backward selection methods...    
+
+1. Different subsetting procedures (best subset vs. forward stepwise vs. backward stepwise) will likely identify different "best" models   
+2. Different indrect error test esitamte statistics (Cp, AIC, BIC, and Adj, R2) will likely identify the "best model"  
+3. For biological variables in particular it is important to consider the ecological/biolgoical components of youyr models and although a predictor may be non-signficant - if you belive it is important than it should be included  
+
+#Directly Estimating Error 
+* Compute validation set error for the best model from each model size    
+* Use 'model.matrix' function to create this matrix from the training data
+
+```{r est error, echo=TRUE,include=TRUE}
+
+test_model<-model.matrix(Salary ~., data = test)
+
+```
+
+
+```{r error values, echo=TRUE,include=TRUE}
+#Create an empty vector to fill with error values 
+validation_errors<-vector("double",length = 19)
+
+for (i in 1:19) {
+  coef_x<-coef(best_subset,id=i)  #extract coeffcients for model size i 
+  pred_x<-test_model[ , names(coef_x)]%*% coef_x #predict salary using matrix algebra
+  validation_errors[i] <- mean ((test$Salary - pred_x)^2) #compute test error between actual and predicted salarys 
+}
+#plot validation errors 
+plot(validation_errors, type="b")
+
+```
+
+* *This method indicates that the one variable model actually has the lowest MSE   
+* However, if you repeat this proccess with a diffrent 'random value seed' we will generate a slightly different best model 
+
+```{r repeat, echo=TRUE,include=TRUE}
+
+# create training - testing data
+set.seed(5)
+sample <- sample(c(TRUE, FALSE), nrow(hitters), replace = T, prob = c(0.6,0.4))
+train <- hitters[sample, ]
+test <- hitters[!sample, ]
+
+# perform best subset selection
+best_subset <- regsubsets(Salary ~ ., train, nvmax = 19)
+
+# compute test validation errors
+test_model <- model.matrix(Salary ~ ., data = test)
+validation_errors <- vector("double", length = 19)
+
+for(i in 1:19) {
+  coef_x <- coef(best_subset, id = i)                     # extract coefficients for model size i
+  pred_x <- test_model[ , names(coef_x)] %*% coef_x           # predict salary using matrix algebra
+  validation_errors[i] <- mean((test$Salary - pred_x)^2)  # compute test error btwn actual & predicted salary
+}
+
+# plot validation errors
+plot(validation_errors, type = "b")
+
+
+```
+
+
+**Create a function using the steps above to simplify the proccess**
+```{r function, echo=TRUE,include=TRUE}
+
+predict.regsubsets <- function(object, newdata, id ,...) {
+  form <- as.formula(object$call[[2]]) 
+  mat <- model.matrix(form, newdata)
+  coefi <- coef(object, id = id)
+  xvars <- names(coefi)
+  mat[, xvars] %*% coefi
+  }
+
+```
+
+* Now this function can help choose from the models of differing size using the K-fold cross-validation approach 
+* The best subset selection within each of the k training sets is prefomred here 
+* First create a vector that allocates each observation to one of k = 10 folds, and we create a matrix in which we will stroe the results 
+
+```{r k-train, echo=TRUE,include=TRUE}
+
+k <- 10
+set.seed(1)
+folds <- sample(1:k, nrow(hitters), replace = TRUE)
+cv_errors <- matrix(NA, k, 19, dimnames = list(NULL, paste(1:19)))
+
+```
+
+* Now, create a loop for cross validation of model selection
+* *In the jth fold, the elements of folds that equal j are in the test set and the remainder are in the trainning set*
+* Essentialy predictions are made for each model size, the test errors on the approate subsets are computed, and the results are stored in a matrix 'cv_errors' 
+
+```{r j in k, echo=TRUE,include=TRUE}
+for(j in 1:k) {
+  
+  # perform best subset on rows not equal to j
+  best_subset <- regsubsets(Salary ~ ., hitters[folds != j, ], nvmax = 19)
+  
+  # perform cross-validation
+  for( i in 1:19) {
+    pred_x <- predict.regsubsets(best_subset, hitters[folds == j, ], id = i)
+    cv_errors[j, i] <- mean((hitters$Salary[folds == j] - pred_x)^2)
+    }
+  }
+
+```
+
+* The result is a 10x19 matrix of which he (i,j)th element corresponds to the test MSE for the ith cross-validation fold for the best j-variable model
+
+* Use the `colmeans` function to average over the coloumns of the matrix 
+* This result is the cross-validation error for the j-variable model 
+
+```{r matrix, echo=TRUE,include=TRUE}
+mean_cv_errors <- colMeans(cv_errors)
+
+plot(mean_cv_errors, type = "b")
+
+```
+* From this we see that the cross validated approach slects an 11 variable model 
+* knowning this we can preform a subset slection for 11 variables on the orginal data set
+
+```{r matrix 1, echo=TRUE,include=TRUE}
+final_best <- regsubsets(Salary ~ ., data = hitters , nvmax = 19)
+coef(final_best, 11)
+```
+
+
+**From these results we can see the best 11 variable model selected from the cross valdiated approach and the associated predictor terms**
+
+
+
+#Component 2 & 3: Ridge Regression & Lasso and PCR & PLS Regression 
+* *This next data set is of the growth of tadpoles over a summer time period - we can use the variables provided to predict the Stage of tadpoles*
+``` {r S, echo=TRUE,include=TRUE}
+#Load data
+library(readxl)
+Dev <- read.csv("./Dev.csv")
+#View as tibble
+View(Dev)
+(
+  Dev <- na.omit(Dev) %>%
+    as_tibble
+  )
+
+```
+* Create a vector of combined predictor values in addition to a vector of your desiered response values 
+``` {r 1, echo=TRUE,include=TRUE}
+x=model.matrix(Stage~IO+BL+Day+TL+BLCM+RA+RB+Mass,data=Dev)[,-1] 
+y=Dev$Stage
+
+```
+
+* Set training dat
+```{r 2, echo=TRUE,include=TRUE}
+set.seed(1) 
+train=sample (1: nrow(x), nrow(x)/2) 
+test=(-train) 
+y.test=y[test]
+
+
+
+```
+
+* We will be using the `PCR` function - found in the `pls` library
+* we will be predicting `Stage`
+* Data aviable through email - File: `Dev.csv`
+
+
+
+```{r Stage 2, echo=TRUE,include=TRUE}
+library(pls)
+set.seed(4)
+pcr.fit=pcr(Stage~IO+BL+TL+Day+BLCM+RA+RB+Mass, data=Dev,scale=TRUE,validation="CV")
+```
+* Syntax for this `pcr` function similar to `lm` with a few additional options
++ `scale=True` - standardizes each predictor - prior to generating the principal components so that the scale on which each variable is measured is to standardized and will not cause an unwanted effect
++ `validation="CV"` causes `pcr` to compute the ten fold cross validation error possible value of M, the number of prinicpal components used
++ the resulting fit can be examined using `summary()` much like `lm()` 
+
+```{r Stage 3, echo=TRUE,include=TRUE}
+summary(pcr.fit)
+```
+
+* The CV score is provided for each possible number of components, ranging from M = 0 onwards
+* The `pcr()` function reports *root mean squared error*; in order to obtain the usual MSE, we must square this quantity 
+* One can plot the cross-validation scores using the `validationplot()`
+
+```{r Stage 4, echo=TRUE,include=TRUE}
+validationplot(pcr.fit,val.type="MSEP")
+```
+* Two components seems to account for a great deal of the varriance seen in the model 
+* The summary function also provides the *precentage of variance explained* in the predictors and in the reponse using different numbers of components 
+
+```{r Stage 5, echo=TRUE,include=TRUE}
+set.seed(1)
+pcr.fit=pcr(Stage~IO+BL+TL+Day+BLCM+Mass+RA+RB,data=Dev,scale=TRUE,validation="CV",subset=train)
+validationplot(pcr.fit,val.type="MSEP")
+
+```
+
+```{r Stage 6, echo=TRUE,include=TRUE}
+pcr.pred=predict (pcr.fit ,x[test ,],ncomp =5) 
+mean((pcr.pred-y.test)^2)
+```
+* Compute the MSE 
+* In addition, we now see that the cross-validated method prefers a model with 5 components 
+```{r Stage 7, echo=TRUE,include=TRUE}
+pcr.fit=pcr(y~x,scale=TRUE,ncomp=5) 
+summary (pcr.fit)
+```
+
+#Partial Least Squares 
+* We can impkment the `plsr()` function also in the `pls` library 
+```{r PLS 1, echo=TRUE,include=TRUE}
+set.seed(1) 
+pls.fit=plsr(Stage~., data=Dev ,subset=train,scale=TRUE, validation="CV") 
+summary (pls.fit)
+validationplot(pls.fit ,val.type="MSEP")
+
+```
+* 3 components appear to be the best fit for this data accoriding to the cross validated method - lowest cross validation error occurs when only M = 3 partial least sqaure directions are used 
+* Now evaluate - the corresponding test set MSE
+
+```{r PLS 2, echo=TRUE,include=TRUE}
+pls.pred=predict(pls.fit ,x[test ,],ncomp =3) 
+mean((pls.pred -y.test)^2)
+
+```
+* Higher than obtained in the method before (~4)
+```{r PLS 3, echo=TRUE,include=TRUE}
+pls.fit=plsr(Stage~., data=Dev ,scale=TRUE,ncomp=3)
+summary (pls.fit)
+ 
+```
+
+* *Notice that the precentage of variance in Stage that the 3 component PLSfit explains almost 89.49 % of the variance - this is almost as much variance as in more robust b=versions of the PCR fit model - this is because PCR only attempts to maximize the amount of variance explained in the predictors, while PLS searches for directions that explain variance in both the predictors and the response*
+
+#The Lasso Method 
+* We need to use the `glmnet()` function 
+* Make sure to switch `alpha=1` or you will preform a ridge regression * We can see from the coeffcient plot that depnding on the choice of tunning parameter some or most of the coefficents will be exatcly equal to zero 
+* now we preform cross validation and compute the associated MSE
+
+```{r , echo=TRUE,include=TRUE}
+grid<-10^seq(10,-2,length=100)
+lasso.mod=glmnet(x[train,],y[train],alpha=1,lambda=grid)
+
+plot(lasso.mod)
+
+ set.seed(1) 
+ cv.out=cv.glmnet(x[train,],y[train],alpha=1) 
+ plot(cv.out) 
+ bestlam =cv.out$lambda.min 
+ lasso.pred=predict (lasso.mod ,s=bestlam ,newx=x[test,])  
+ 
+ mean((lasso.pred -y.test)^2)
+ 
+```
+* This MSE is lower than the previous methods achived 
+
+```{r , echo=TRUE,include=TRUE}
+out=glmnet(x,y,alpha=1,lambda=grid)
+
+lasso.coef=predict (out ,type="coefficients",s=bestlam)[1:9,]
+
+lasso.coef
+
+lasso.coef[lasso.coef!=0]
+ 
+```
+* Model selects only 4 predictor terms - IO is exlcuded as it dose not contribute enough to be signgifcant in the model 
+
+#Linear Model Assingment 
+1. *Using the `Dev.csv' data sheet provided in part two - complete both best subset, forward, and backward model selection*
+2. *Compare the terms selected between the diffreing methods* 
+3. *Complete a breif markdown file - reporting the AIC, Cp, and BIC values associated with the 'best' model from forward, backward and subset selection*
+
+
+```{r awnser, echo=TRUE,include=TRUE}
+S_set <- regsubsets(Stage ~ ., Dev, nvmax = 9)
+results <- summary(S_set)
+ results
+```
+
