@@ -1,0 +1,357 @@
+---
+title: "CH7 Non-linear models"
+author: "Regan Cross"
+date: '2019-03-02'
+output: html_document
+---
+
+This tutorial is based on Chapter 7 "Moving Beyond Linearity". 
+This tutorial covers polynomial regression, step functions, regression splines, smoothing splines, local regression, and generalized additive models. 
+
+
+##Polynomial Regression
+Linear model with predictors xi, xi^2^, xi^3^, ..., xi^d^. 
+Note: Models with too large a value of d can be overly flexible and take on strange shapes (i.e. d > 4). 
+
+Example: We'll look at how habitat heterogeneity affects the variation in wingedness of seeds for a dune plant. 
+We quantified the % of suitable habitat in patches surrounding parent plants, then quantified the variation in wingedness of that plant's seeds. 
+```{r polynomial regression graphs}
+library(tidyverse)
+dat <- read.csv("anthshab.csv")
+head(dat)
+summary(dat)
+
+# we are going to look at the mean plant standard deviation in habitat patch suitability, and the standard deviation of the residual wing index. 
+ggplot(dat, aes(x = meanSDhab, y = sdresidWI, colour=site)) +
+  geom_point(size = 4) +
+  theme(legend.position = "none") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+# let's see if there is maybe a linear relationship
+ggplot(dat, aes(x = meanSDhab, y = sdresidWI, colour=site)) +
+  geom_point(size = 4) +
+  geom_smooth(method = "lm", colour = "black") +
+  theme(legend.position = "none") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+# looks like nope
+
+# perhaps it could be a cubic polynomial
+ggplot(dat, aes(x = meanSDhab, y = sdresidWI, colour=site)) +
+  geom_point(size = 4) +
+  geom_smooth(method = "lm", colour = "black", formula = y ~ x + I((x-mean(x))^2) + I((x-mean(x))^3)) +
+  theme(legend.position = "none") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+# looks promising, let's test it
+
+```
+
+```{r polynomial model}
+mod3 <- lm(sdresidWI ~ meanSDhab + I(meanSDhab^2) + I(meanSDhab^3), data=dat)
+summary(mod3)
+```
+All terms in the cubic polynomial regression are significant, and the model explains 62% of the variation in the data. 
+
+```{r more polynomial modelling}
+# alternatively we can write polynomial models like this (for brevity)
+mod3a <- lm(sdresidWI ~ poly(meanSDhab, 3), data=dat)
+summary(mod3a)
+# and we get the same overall p value and R^2^'s, but the p values for the linear and quadratic components are no longer significant; this is because in the original mod3 the linear, quadratic and cubic parameters are allowed to be correlated because they are the direct estimates of the individual effects without accounting for their correlation
+# whereas in the mod3a with the poly() command, the model produces orthogonal polynomials and so they are not allowed to be correlated, and it shows that only the cubic function is really significant
+
+# let's look at the coefficients
+coef(summary(mod3a))
+coef(summary(mod3))
+# they differ because in 3a the columns are orthogonal polynomials so each column is a linear combination of all the variables
+# whereas in 3 they are just the direct coefficients of each variable individually
+
+# we can also obtain the direct (correlated) effects using the poly() command if we include raw=TRUE
+mod3b <- lm(sdresidWI ~ poly(meanSDhab, 3, raw=TRUE), data=dat)
+summary(mod3b) # same results as mod3
+coef(summary(mod3b))
+```
+Note on using raw vs orthogonal polynomials: If we use the correlated (raw=TRUE) covariates, our ability to determine which are important (and their effect sizes) deteriorates, and we might get much larger SEs (see that SEs are larger in coefs from mod3b than mod3a for intercept and linear component). So, it might be better to use orthogonalized polynomials to see the correct effect sizes and get more stable estimates. One drawback of this is that we lose interpretability... the meaning of the coefficients is less clear. 
+
+
+So the cubic polynomial is highly significant, let's see if its the best fit polynomial regression for this data.
+```{r best polynomial model}
+fit.1= lm(sdresidWI ~ meanSDhab, data=dat)
+fit.2= lm(sdresidWI ~ poly(meanSDhab, 2), data=dat)
+fit.3= lm(sdresidWI ~ poly(meanSDhab, 3), data=dat)
+fit.4= lm(sdresidWI ~ poly(meanSDhab, 4), data=dat)
+fit.5= lm(sdresidWI ~ poly(meanSDhab, 5), data=dat)
+anova(fit.1, fit.2, fit.3, fit.4, fit.5)
+```
+The cubic model is clearly the best fit, and the rest of the models are not good fits. 
+Alternatively, you can use cross-validation to choose the best polynomial degree. (as in Chapter 5)
+
+
+## Step functions
+Cut range of variable into K distinct regions to produce a qualitative variable.
+Avoid imposing a global structure by breaking range of X into bins and fitting a different constant to each bin - essentially converting a continuous variable into an ordered categorical variable (using dummy indicator variables). 
+
+Here, we'll use the Wage data in the ISLR package, to see whether people's age affects what wage category they fall into. 
+```{r step functions}
+library(ISLR)
+# cut the data into K = 4 groups
+head(Wage)
+table(cut(Wage$age, 4))  # automatically cuts at 33.5, 49, 64.5 years old
+table(cut(Wage$age, breaks=c(17, 33, 42, 51, 81))) # can manually specify the breaks as well
+
+mod <- lm(wage ~ cut(age, 4), data=Wage)
+summary(mod)
+coef(summary(mod))
+```
+Average salary for first age group (<33.5) is $94 159, then the estimates are additive for the rest of the age groups. The last age group is not significantly higher than the first age group (p = 0.126). This step function on age explains 6.25% of the variation in the wage data. 
+
+```{r step fn graph}
+ggplot(Wage, aes(x = age, y = wage)) +
+  geom_point(size = 2, alpha= 0.5) +
+  geom_smooth(method = "lm", colour = "red", alpha=0.6, fill="green3", formula = y ~ cut(x, 4)) +
+  theme(legend.position = "none") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+We can see that the SE around the last segment of the line is wider because the sample size is so much smaller in this group (n = 72). The segments are broken up based on even spacing throughout the range of X. 
+
+We can also try with specified break points to get more even sample sizes within each group. 
+```{r step model}
+mod <- lm(wage ~ cut(age, breaks=c(17, 33, 42, 51, 81)), data=Wage)
+summary(mod)
+coef(summary(mod))
+```
+For this, all of the subsequent groups have significantly higher salaries than the youngest group. 
+
+Are all groups significantly different from each other?
+```{r step tukey}
+aov <- aov(mod)
+TukeyHSD(aov)
+```
+Nope, the last three groups are not significantly different from each other, which we can see when we plot the relationsip (below).
+
+```{r step graph w specified breaks}
+ggplot(Wage, aes(x = age, y = wage)) +
+  geom_point(size = 2, alpha= 0.5) +
+  geom_smooth(method = "lm", colour = "red",  alpha=0.6, fill="green3", formula = y ~ cut(x, breaks=c(17, 33, 42, 51, 81))) +
+  theme(legend.position = "none") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+
+## Regression splines
+Combination of polynomial and step functions. Divide range of X into K regions and fit a polynomial to each region. 
+Use piecewise polynomials by fitting separate low degree polynomials over different regions of x, broken up by 'knots'. 
+Can apply constraints (continuous, smoothing) and splines. 
+Smoothing constraint makes the different regions join smoothly at the knots so they are not disjunct.
+Natural spline is the regression spline with a boundary constraint (so it remains linear at the boundaries) and these produce more stable estimates. 
+Splines can produce better results than polynomial regression because they introduce flexibility by increasing the number of knots rather than increasing the exponent, so they produce more stable estimates. 
+
+For this example, we can use temperature data through time. This is hourly temperature data in °C recorded on a HOBO temperature data logger with 2 probes.
+```{r regression splines, message=FALSE}
+library(splines)
+temps <- read.csv("OSJ2_temps.csv")
+str(temps) # temp_1 and temp_2 are the temps recorded on the individual probes
+temps <- temps[,c("timepoint", "temp_1", "temp_2")]
+library(reshape)
+temp <- melt(temps, id=c("timepoint"))
+names(temp) <- c("timepoint", "probe", "temp")
+temp$probe <- NULL
+str(temp)
+
+ggplot(temp, aes(x= timepoint, y=temp)) +
+  geom_point()
+# a lot of data, lets cut it 
+
+subtemp <- subset(temp, timepoint <=50)
+ggplot(subtemp, aes(x= timepoint, y=temp)) +
+  geom_point()
+```
+
+Spline function in linear model. The default polynomial degree is 3 (cubic spline) - can specify with degree=_. 
+```{r spline models}
+tempmod <- lm(temp ~ bs(timepoint, knots=c(20, 40, 50)), data= subtemp) #can specify where we want the knots
+tempmod <- lm(temp ~ bs(timepoint, df=6), data= subtemp) # or specify degrees of freedom and it will put knots at quantiles
+attr(bs(subtemp$timepoint, df=6), "knots") # specified knots at 13.25, 25.50, and 37.75
+summary(tempmod)
+```
+This cubic spline with 6 df explains 87.8% of the variation in the data and is highly significant. 
+
+```{r spline graph}
+ggplot(subtemp, aes(x= timepoint, y=temp)) +
+  geom_point() +
+  geom_smooth(method = "lm", colour = "red", formula = y ~ bs(x, df=6, degree=2)) +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+# change around df and degree to see better or worse fits
+```
+
+Let's see how model fit changes when we adjust the number of knots (through changing the df).
+```{r splines adjusting knots}
+tempmod2 <- lm(temp ~ bs(timepoint, df=8, degree=3), data= subtemp)
+summary(tempmod2)
+```
+Now it explains 89.8%, and the adjusted R^2^ also increased from 0.87 to 0.89 from the 6-df model. We can also change around the degree to see whether cubic is the best fit (For example the 2nd order polynomial actually produces a higher adjusted R^2^ than the default cubic spline). 
+Cross-validation can be used to find the best fit model. 
+
+*Natural splines*
+Regression spline with a boundary constraint (so it remains linear at the boundaries), produce more stable estimates.
+Use ns() instead of bs().
+```{r natural splines}
+tempmodNS <- lm(temp ~ ns(timepoint, df=8), data= subtemp)
+summary(tempmodNS)
+```
+Can also just specify knots manually with ns(), but cannot adjust the degree of the polynomial, it is always cubic but goes linear at boundaries. 
+
+```{r natural spline graph}
+ggplot(subtemp, aes(x= timepoint, y=temp)) +
+  geom_point() +
+  geom_smooth(method = "lm", colour = "red", formula = y ~ ns(x, df=8)) +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+Note how boundaries go more linear than in the bs() spline (especially the left one). This produces more stable estimates. 
+
+
+## Smoothing splines
+Similar to regression splines; find function g that minimizes RSS while still having a smooth function; these are natural cubic splines with knots at every xi but lambda controls the roughness so the effective df don't get out of control (higher df means more flexible smoothing spline). LOOCV can be computed efficiently for smoothing splines. 
+
+```{r smoothing spline, message=FALSE}
+ss <- smooth.spline(subtemp$timepoint, subtemp$temp, df=16)
+{plot(subtemp$timepoint, subtemp$temp, pch=19, cex=0.8, col="black")
+title(main="Smoothing Spline")
+lines(ss, col="red", lwd=2)}
+
+# or in ggplot
+library(ggformula)
+ggplot(subtemp, aes(x= timepoint, y=temp)) +
+  geom_point(size=2) +
+  geom_spline(df=16, colour= "red", lwd=0.9) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+```
+
+We specified the df as 6, but we can also decide on df using cross validation. 
+```{r ss using cv to choose df}
+ss2 <- smooth.spline(subtemp$timepoint, subtemp$temp, cv=TRUE)
+# note that this produces a warning that non-unique x values might not work so well with cross validation because its trying to do LOOCV but its ambiguous when there are more than one x value
+ss2 <- smooth.spline(subtemp$timepoint, subtemp$temp, cv=FALSE)
+# setting cv=FALSE means it uses generalized CV which works better with non-unique x values
+ss2$df # cv selects a df of 22
+
+ggplot(subtemp, aes(x= timepoint, y=temp)) +
+  geom_point(size=2) +
+  geom_spline(df=27.25, colour= "red", lwd=0.9) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+
+{plot(subtemp$timepoint, subtemp$temp, pch=19, cex=0.8, col="black")
+title(main="Smoothing Spline")
+lines(ss, col="red", lwd=2)}
+```
+
+
+## Local Regression 
+Similar to splines but the regions are allowed to overlap.
+Compute the fit at target point using only nearby training data (memory-based procedure). 
+Decide on weighting function K, whether to fit linear, constant or quadratic regression, and the span s (which controls the flexibility of non-linear fit). 
+You can fit multiple linear regresision models that are global in some variables but local in others -- called varying coefficient models (good for adapting model to most recently gathered data). 
+
+```{r local regression}
+lims <- range(subtemp$timepoint)
+time.grid <- seq(from = lims[1], to = lims[2])
+localr <- loess(temp ~ timepoint, span=0.2, data=subtemp)
+localr2 <- loess(temp ~ timepoint, span=0.5, data=subtemp)
+
+{plot(subtemp$timepoint, subtemp$temp, pch=19, cex=0.8, col="black")
+title(main="Local Regression")
+lines(time.grid, predict(localr, data.frame(timepoint=time.grid)), col ="red",lwd =2)
+lines(time.grid, predict(localr2, data.frame(timepoint=time.grid)), col ="blue",lwd =2)
+legend("topright", legend=c("Span= 0.2", "Span= 0.5"), col=c("red","blue"),lty =1, lwd =2, cex =.8)}
+```
+As you increase the span, the fit gets smoother. The span refers to the neighbourhood used to calculate the spline at each data point. For span = 0.2, the neighbourhood consists of 20% of the observations, whereas for span = 0.5 the neighbourhood consists of 50% of the observations. 
+
+Note: You can also fit local regression models using the locfit library. 
+
+## Generalized additive models (GAMs)
+Multiple regression with non-linear functions of each variable, while maintaining additivity (can calculate fi for each X and add together all contributions). 
+Can use any of the previous methods as components of a GAM. Limitation is that it must be additive but can manually add interactions. Good compromise between linear and fully non-parametric models. 
+GAMs can also be used for classification problems.
+
+Use the lm() function overall and then apply non-linear functions to the individual predictors.
+For this, we will again use the Wage data in the ISLR library so that we have enough variables.
+```{r gams}
+gam1 <- lm(wage ~ ns(year,4) + ns(age, 5) + education, data=Wage)
+# so here we have done natural splines on year and age, with 4 and 5 degrees of freedom respectively and then a stepwise function on the education variable (done automatically because its categorical)
+summary(gam1)
+```
+
+We can also fit the model using smoothing splines, in the gam library.
+All of the terms are fit simultaneously, taking each other into account to explain the response. 
+```{r ss in gams, message=FALSE}
+library(gam)
+gam2 <- gam(wage ~ s(year,4) + s(age, 5) + education, data=Wage)
+summary(gam2)
+plot(gam2, se=TRUE, col="blue")
+```
+These graphs display the relationships between each variable and the response (wage) in the fitted model. It breaks the model down into its respective pieces. So the first plot is the smoothing spline of year, the second is the smoothing spline of age, and the third is a stepwise function of education. 
+
+We can also produce the plots for the lm model, just use plot.Gam because the model wasn't produced with the gam() function.
+```{r gam plot}
+plot.Gam(gam1, se=TRUE, col="red")
+```
+Similar trends are seen.
+
+Year actually looks quite normal... so is the smoothing spline the best function here? 
+```{r gam model sln}
+gamA <- gam(wage ~ s(age, 5) + education, data=Wage)
+gamB <- gam(wage ~ year + s(age, 5) + education, data=Wage)
+gamC <- gam(wage ~ s(year,4) + s(age, 5) + education, data=Wage) # same as gam2, just labelling for clarity
+anova(gamA, gamB, gamC, test="F")
+```
+The model that includes linear year is definitely better than the model without year, however there is no evidence that we should be including a non-linear function of year. 
+
+```{r}
+summary(gamC)
+```
+The 'Anova for Nonparametric Effects' table shows the p-values for a non-linear relationship as opposed to the null hypothesis of a linear relationship. We can see that the p value for year is non-significant, whereas age is definitely non-linear.
+
+Any relationships can be used in a gam, including local regression fits. 
+```{r local reg in gams}
+gam.lo <- gam(wage ~ year + lo(age, span=0.7) + education, data=Wage)
+plot(gam.lo, se=TRUE, col="green")
+summary(gam.lo)
+```
+
+We can also specify interactions. Eg. the interaction between year and age fit by local regression.
+```{r interactions in gams, warning=FALSE}
+gam.lo.i <- gam(wage ~ lo(year, age, span=0.5) +education, data=Wage)
+summary(gam.lo.i)
+```
+
+To plot the 3D interaction surface, load package akima.
+```{r, message=FALSE}
+library(akima)
+plot(gam.lo.i)
+```
+
+We can also use logistic regression in a GAM. (Make the wage variable into a binomial by using the I(), so we are predicting whether or not an individual makes more than $250000). 
+```{r logistic reg in gams}
+gam.lr <- gam(I(wage>250) ~ year +s(age, df=5) +education, family=binomial, data=Wage)
+plot(gam.lr, se=TRUE, col="purple")
+summary(gam.lr)
+```
+Reducing it to a binomial variable significantly reduces the AIC value, and year is not a significant predictor anymore. We are only requiring the variables to predict a binomial response, as opposed to a wide range of wages, so it makes sense that the model is better at explaining this lower amount of variation (and giving a higher, better AIC).
+
+```{r}
+table(Wage$education, I(Wage$wage>250))
+```
+No people without high school diplomas make more than $250k. So we can re-fit the gam removing this category to get more sensible results. We can also remove the year variable since it is not having a significant when we make wage binary.
+
+```{r}
+gam.lr.s <- gam(I(wage>250) ~ s(age, df=5) +education, family=binomial, data=Wage, subset=(education!="1. < HS Grad"))
+summary(gam.lr.s)
+```
+Based on AICs, this is the best model seen so far in the GAM section. 
+
+
+### Assignment: 
+*Analyze a biological data set with non-linear predictor(s) using 3 of the methods shown in this tutorial (polynomial regression, step functions, regression splines, smoothing splines, local regression, or GAMs). Determine which model best fits the data (using anovas, AICs, R^2^'s etc). Write a short report in R-markdown outlining the modelling and the best model. *
+
+
+

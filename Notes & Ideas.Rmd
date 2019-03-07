@@ -1,0 +1,17 @@
+---
+title: "Notes & Ideas"
+output: html_document
+---
+
+# Future plans
+
+  * Grad course to work through *Statistical Rethinking* by Richard McElreath
+      + [Lectures on YouTube](https://www.youtube.com/channel/UCNJK6_DZvcMqNSzQdEkzvzA/playlists) by Richard McElreath
+      + And [github site with videas and slides] (https://github.com/rmcelreath/statrethinking_winter2019/blob/master/README.md)
+      + Accompanying [R code by Solomon Kurz](https://bookdown.org/connect/#/apps/1850/access); using the [brms package](https://github.com/paul-buerkner/brms)
+      + Great [twitter examples](https://twitter.com/BenYAndrew/status/1093128915030327301?s=03) of model estimate bias from Ben Andrews: 
+          + His [code on GitHub](https://github.com/andrew10043/probability/blob/master/dag_brms_examples.R) 
+      
+      
+          
+  * 
