@@ -46,9 +46,15 @@ Bootstrap and permutation models: [3_Permutations.html](./3_Permutations.html)
 
 ## 4. Linear Model Selection (Sam)
 
+Subset selection, shrinkage, dimension reduction, ridge regression and the lasso [4_ModelSelection.html](./ModelSelection.html)
+
 ## 5. Nonlinear Regression Models (Regan)
 
+Polynomial regression, splines, and generalized additive models [5_NonlinearModels.html](5_NonlinearModels.html)
+
 ## 6. Tree-based Classification (Ryan)
+
+[6_Classification_Trees.html](6_Classification_Trees.html)
 
 ## 7. Support Vector Machines (Rob)
 

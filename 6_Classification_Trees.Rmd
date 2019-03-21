@@ -1,0 +1,274 @@
+---
+title: "Classification_Trees"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Tree-based Methods: Decision Trees
+
+## Load libraries
+```{r}
+library(tree)
+library(rpart)
+```
+
+## Community data for vegetation in Bryce Canyon
+
+Import data
+
+```{r}
+BryceCanyon.df<-read.csv("./BryceCanyon.csv", header=TRUE)
+attach(BryceCanyon.df)
+```
+
+Generate training and testing data sets
+
+```{r}
+set.seed (2)
+train<-sample(1:nrow(BryceCanyon.df), 80)   #split the dataset into equal partitions (n=160)
+BC.train=BryceCanyon.df[train ,]
+BC.test=BryceCanyon.df[-train ,]
+```
+
+
+# Classification trees
+
+## Model fitting
+```{r}
+BC.class <- tree(factor(arcpat>0)~depth + pos + quad, data=BC.train)
+BC.class
+```
+
+
+## Evaluate model
+
+```{r}
+summary(BC.class)
+
+plot(BC.class)
+text(BC.class)
+```
+
+
+## Estimate test error rate
+```{r}
+BC.class.pred<-predict(BC.class, BC.test, type="class")
+```
+
+
+## Classification rate
+
+```{r}
+Ctab<-table(BC.class.pred, factor(BC.test$arcpat>0))
+Ctab
+(Ctab[1]+Ctab[4])/sum(Ctab)
+```
+
+
+# Cross-validation and pruning
+
+```{r}
+set.seed(3)
+BC.class.cv<-cv.tree(BC.class, FUN=prune.misclass)
+BC.class.cv
+```
+
+
+## cross-validation error rate
+
+```{r}
+par(mfrow =c(1,2))
+plot(BC.class.cv$size, BC.class.cv$dev, type="b")
+plot(BC.class.cv$k, BC.class.cv$dev, type="b")
+```
+
+## Prune to tree with lowest error rate
+
+```{r}
+BC.class.prune<-prune.misclass(BC.class,best=2)
+plot(BC.class.prune)
+text(BC.class.prune, pretty=0)
+```
+
+
+# Evaluate model performance
+
+```{r}
+BC.class.prune.pred<-predict(BC.class.prune, BC.test, type="class")
+Ptab<-table(BC.class.prune.pred, factor(BC.test$arcpat>0))
+Ptab
+(Ptab[1]+Ptab[4])/sum(Ptab)
+```
+
+
+```{r}
+BC.class.prune5<-prune.misclass(BC.class, best =5)
+plot(BC.class.prune5)
+text(BC.class.prune5, pretty=0)
+```
+
+```{r}
+BC.class.prune.pred5<-predict(BC.class.prune5, BC.test, type="class")
+Ptab2<-table(BC.class.prune.pred5, factor(BC.test$arcpat>0))
+Ptab2
+(Ptab2[1]+Ptab2[4])/sum(Ptab2)  #Correct classification rate
+
+detach(BryceCanyon.df)
+```
+
+# Regression Trees
+
+## Import data: Bryce Canyon - transformed
+
+```{r}
+BryceCover.df<-read.csv("./cover.csv", header=TRUE)
+```
+
+# Generate training and testing data
+
+```{r}
+set.seed(2)
+train2<-sample(1:nrow(BryceCover.df), 80)
+BC.train2=BryceCover.df[train2 ,]
+BC.test2=BryceCover.df[-train2 ,]
+```
+
+
+# Fit model
+
+```{r}
+BC.reg <- tree(arcpat~ elev + slope + av, data=BC.train2)
+BC.reg
+```
+
+
+# Evaluate model
+
+```{r}
+summary(BC.reg)
+```
+
+# Visual model
+
+```{r}
+par(mfrow=c(1,1))
+plot(BC.reg)
+text(BC.reg, pretty=0)
+```
+
+
+# Cross-validation
+
+```{r}
+BC.reg.cv<-cv.tree(BC.reg)
+names(BC.reg.cv)
+
+par(mfrow =c(1,1))
+plot(BC.reg.cv$size, BC.reg.cv$dev, type="b")
+
+BC.reg.prune<-prune.tree(BC.reg, best=7)   #actual lowest value 1
+plot(BC.reg.prune)
+text(BC.reg.prune, pretty=0)
+
+
+yhat=predict(BC.reg, newdata=BryceCover.df[-train2 ,])
+BC.reg.test<-BryceCover.df[-train2,"arcpat"]
+plot(yhat ,BC.reg.test)
+abline (0,1)
+mean((yhat-BC.reg.test)^2)
+```
+
+
+# Bagging, Random Forests, & Boosting
+
+# Install libraries
+
+```{r}
+library(dismo)
+library(randomForest)
+```
+
+
+# Fit model
+
+Basic model
+
+```{r}
+BC.cover.bag<-randomForest(arcpat~annrad+asp+av+elev+grorad+slope, data=BC.train2, mtry=6, importance=TRUE)
+BC.cover.bag
+```
+
+
+## Bagging
+
+```{r}
+yhat.bag<-predict(BC.cover.bag, newdata=BryceCover.df[-train2,])
+BC.bag.test<-BryceCover.df[-train2,"arcpat"]
+plot(yhat.bag ,BC.bag.test)
+abline (0,1)
+mean((yhat.bag-BC.bag.test)^2)
+```
+
+## Bagging - change number of trees grown
+
+```{r}
+BC.cover.bag2<-randomForest(arcpat~annrad+asp+av+elev+grorad+slope, data=BC.train2, mtry=6, ntree=25)
+BC.cover.bag2
+yhat.bag2<-predict(BC.cover.bag2, newdata=BryceCover.df[-train2,])
+mean((yhat.bag2-BC.bag.test)^2)
+```
+
+
+## Random forest
+
+```{r}
+BC.cover.rf<-randomForest(arcpat~annrad+asp+av+elev+grorad+slope, data=BC.train2, mtry=2, importance=TRUE)
+yhat.rf<-predict(BC.cover.rf, newdata=BryceCover.df[-train2,])
+mean((yhat.rf-BC.bag.test)^2)
+importance(BC.cover.rf)
+
+varImpPlot(BC.cover.rf)
+```
+
+
+## Boosting
+ 
+```{r}
+library (gbm)
+set.seed (1)
+
+
+BC.boost<-gbm(arcpat~annrad+asp+av+elev+grorad+slope, data=BC.train2,
+              distribution="gaussian",n.trees =5000 , interaction.depth =4)
+
+summary(BC.boost)
+
+
+par(mfrow =c(1,2))
+plot(BC.boost,i="elev")
+plot(BC.boost,i="asp")
+
+
+yhat.boost<-predict(BC.boost,data=BC.train2, n.trees =5000)
+mean((yhat.boost-BC.bag.test)^2)
+
+
+
+BC.boost2<-gbm(arcpat~annrad+asp+av+elev+grorad+slope, data=BC.train2,
+              distribution="gaussian",n.trees =5000 , interaction.depth =4,
+              shrinkage=0.2, verbose=F)
+
+summary(BC.boost2)
+
+yhat.boost2<-predict(BC.boost2,data=BC.train2, n.trees =5000)
+mean((yhat.boost2-BC.bag.test)^2)
+```
+
+
+
+
+
