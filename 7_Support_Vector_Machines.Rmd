@@ -1,0 +1,286 @@
+---
+title: "Support Vector Machines"
+author: "Robert I. Colautti"
+output: html_document
+---
+
+```{r, echo=F}
+source("theme_pub.R")
+library(ggplot2); theme_set(theme_pub())
+```
+
+# Setup
+
+```{r}
+library(ggplot2) # Graphics
+library(e1071) # For fitting support vector machines
+library(ROCR) # For ROC curves
+library(ISLR) # Contains gene expression data
+```
+
+
+# Introduction
+
+This tutorial covers an area of machine learning for classification that uses **Maximum Marginal Classifiers** (MMC), **Support Vector Classifiers** (SVC), and **Suppport Vector Machines** (SVM). Conceptually, the two *classifiers* are very similar [linear models](./1_LinearModels.html) and the *support vector machines* are like [non-linear models](./5_NonlinearModels.html) EXCEPT that instead of deriving an equation for a line that tries to fit THROUGH the data, we try to find an equation for a *hyperplane* that SEPARATES the data into two or more categories. 
+
+A hyperplane sounds fancy, but it is just an equation that defines the separation between two or more variables. With two predictors the hyperplane is a straight line (1-dimension), with three predictors the hyperplane is a plane (2-dimensions), and for $p$ predictors the hyperplane is a $p-1$-dimensional hyperplane.
+
+The MMC, SVC, and SVM are fit using an optimization algorithms that quickly increase in complexity. The function(s) that relate(s) the data to the optimization criteria is called a **kernel**. 
+
+# Maximum Marginal Classifier (MMC)
+
+For a set of $p$ predictors, and a set of observation point $x_i$ is a vector of values for each of the $p$ predictors, with a group assignment $y_i$ taking on a value of -1 or +1:
+
+The maximum marginal classifier is the $p-1$ hyperplane that best separates the data, following the optimization algorithm:
+
+1. Maximize the vecor $M$ (where $M = [\beta_0,\beta_1,\beta_2,...\beta_p ]$)
+2. Under the constraint that $\sum_{j=1}^p \beta^2_j = 1$
+3. So that $y_i(\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+...+\beta_px_{ip}) \geq M$ for each and every $n$
+
+This method assumes that it is possible to draw a hyperplane that will correctly separate every single point. In reality, there may be some overlap, for which the MMC is not very useful.
+
+# Support Vector Classifier (SVC)
+
+The support vector classifier is an extension of the MMC that allows some overlap in points but tries to find the hyperplane that separates most of the points without being unduly influenced by individual points. 
+
+For a set of $p$ predictors, and a set of observation point $x_i$ is a vector of values for each of the $p$ predictors, with a group assignment $y_i$ taking on a value of -1 or +1:
+
+The support vector classifier is the $p-1$ hyperplane that best separates the data, following the optimization algorithm (note difference with MMC):
+
+1. Maximize the vecor $M$ (where $M = [\beta_0,\beta_1,,...\beta_p,\epsilon_1,...,\epsilon_n ]$)
+2. Under the constraint that $\sum_{j=1}^p \beta^2_j = 1$
+3. So that $y_i(\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+...+\beta_px_{ip}) \geq M(1-\epsilon_i)$ 
+4. And $\epsilon_i \geq0,\sum_{i=1}^n \epsilon_i \leq C$
+
+Where $\epsilon$ are *slack* variables that are on the wrong side of the hyperplane.
+
+$C$ is the *tuning parameter* that is typically chosen by cross-validation. A higher $C$ allows for more slack variables, so it's more like a *tolerance* parameter -- it affects how much the hyperplane 'tolerates' misclassified points
+
+## SVC Code
+
+Create a toy dataset with 2 *features* (i.e. predictors) and a categorical variable with two categories (A and B):
+
+```{r}
+set.seed(1)
+SVCdat<-data.frame(Cat=c(rep("A",10),rep("B",10)),Feat1=rnorm(20),Feat2=rnorm(20))
+SVCdat$Feat1[SVCdat$Cat=="B"]<-SVCdat$Feat1[SVCdat$Cat=="B"]+1 # tidyr version?
+SVCdat$Feat2[SVCdat$Cat=="B"]<-SVCdat$Feat2[SVCdat$Cat=="B"]+1
+```
+
+Check if there is a line that correctly separates all the observations, and fit the MMC:
+
+```{r}
+qplot(Feat1,Feat2,colour=Cat,data=SVCdat)
+Mod1<-svm(Cat~.,data=SVCdat,kernel="linear",cost=10,scale=F)
+summary(Mod1)
+```
+
+```{r}
+plot(Mod1,SVCdat)
+```
+
+The $X$ characters show the support vectors, which can be identified by the index slice of the model object:
+
+```{r}
+Mod1$index
+```
+
+> What do these numbers index?
+
+Let's try with a smaller cost parameter
+
+```{r}
+Mod2<-svm(Cat~.,data=SVCdat,kernel="linear",cost=0.1,scale=F)
+plot(Mod2,SVCdat)
+```
+
+This increases the number of support vectors (shown by the Xs)
+
+### Cross-validation
+
+```{r}
+set.seed(1)
+Mod3<-tune(svm,Cat~.,data=SVCdat,kernel="linear",
+           ranges=list(cost=10^c(-3:2)))
+summary(Mod3)
+summary(Mod3$best.model)
+```
+
+Now that we have a model, we can make predictions on a set of test observations.
+
+```{r}
+TstDat<-data.frame(Cat=sample(c("A","B"),20,rep=T),Feat1=rnorm(20),Feat2=rnorm(20))
+TstDat$Feat1[SVCdat$Cat=="B"]<-SVCdat$Feat1[SVCdat$Cat=="B"]+1 # tidyr version?
+TstDat$Feat2[SVCdat$Cat=="B"]<-SVCdat$Feat2[SVCdat$Cat=="B"]+1
+
+Pred<-predict(Mod3$best.model,TstDat)
+table(Predicted=Pred,Actual=TstDat$Cat)
+```
+
+Now let's see what happens if we separate the groups enough to be able to fit a line between them:
+
+```{r}
+SVCdat$Feat1[SVCdat$Cat=="B"]<-SVCdat$Feat1[SVCdat$Cat=="B"]+0.5 # tidyr version?
+SVCdat$Feat2[SVCdat$Cat=="B"]<-SVCdat$Feat2[SVCdat$Cat=="B"]+0.5
+
+qplot(Feat1,Feat2,colour=Cat,data=SVCdat)
+```
+
+And fit the MMC:
+
+```{r}
+Mod4<-svm(Cat~.,data=SVCdat,kernel="linear",cost=100000)
+summary(Mod4)
+plot(Mod4,SVCdat)
+```
+
+Compare with a lower cost:
+
+```{r}
+Mod4<-svm(Cat~.,data=SVCdat,kernel="linear",cost=1)
+summary(Mod4)
+plot(Mod4,SVCdat)
+```
+
+> Why is a lower cost generally preferrable?
+
+# Support Vector Machine (SVM)
+
+Support vector machines are a non-linear version of support vector classifiers. Here the math is a bit more complicated to write out, but it is conceptually not too bad. Recall that each 'point' is defined by a vector $x_i$, so for example:
+
+* A point on a line is defined by a vector of length 1
+* A point on a plane is defined by a vector of length 2
+* A point in a cube is defined by a vector of length 3
+* A point in $p$-dimensional space is defined by a vector of length $p$
+
+The SVM compares the the inner-product of each pair of points. So for example, in the 2-d version with vector $x_1 = [0.2,0.8]$ and vector $x_2 = [0.3,0.5]$, the inner product is:
+
+```{r}
+v1<-c(0.2,0.8)
+v2<-c(0.3,0.5)
+v1*v2
+sum(v1*v2) ## <--- This is the inner product
+```
+
+What about for the same point?
+
+```{r}
+sum(c(0.2,0.2)*c(0.2,0.2))
+```
+
+
+# SVM Code
+
+To fit an SVM we again use the `svm()` function but this time with a different `kernel` parameter.
+
+Generate a set of toy data with a non-linear boundary:
+
+```{r}
+set.seed(1)
+SVMdat<-data.frame(Cat=c(rep("A",150),rep("B",50)),Feat1=rnorm(200),Feat2=rnorm(200))
+SVMdat$Feat1[1:100]<-SVMdat$Feat1[1:100]+2
+SVMdat$Feat1[101:150]<-SVMdat$Feat1[101:150]-2
+SVMdat$Feat2[1:100]<-SVMdat$Feat2[1:100]+2
+SVMdat$Feat2[101:150]<-SVMdat$Feat2[101:150]-2
+qplot(Feat1,Feat2,colour=Cat,data=SVMdat)
+```
+
+Split into training vs testing data and fit the SVM:
+
+```{r}
+set.seed(1)
+Train<-sample(1:200,100)
+Mod5<-svm(Cat~.,data=SVMdat[Train,],kernel="radial",gamm=1,cost=1)
+plot(Mod5,SVMdat[Train,])
+summary(Mod5)
+```
+
+> Try increasing cost and compare the decision boundary
+
+### Cross-validation
+```{r}
+set.seed(1)
+Mod6=tune(svm, Cat~., data=SVMdat[Train,], kernel="radial",
+              ranges=list(cost=10^c(-1:3),gamma=c(0.5,1,2,3,4)))
+summary(Mod6)
+plot(Mod6$best.model,SVMdat[Train,])
+table(Actual=SVMdat[-Train,"Cat"],Predicted=predict(Mod6$best.model,newx=SVMdat[-Train,]))
+```
+
+### ROC Curves
+
+Create a function for calculating and plotting ROC curves:
+
+```{r}
+ROCplot<-function(Predicted,Actual, ...){
+  Pred<-prediction(Predicted,Actual)
+  Perf<-performance(Pred,"fpr","tpr")
+  plot(Perf, ...)
+}
+```
+
+Now fit the SVM and extract the fitted (i.e. predicted) values using `decision.values=T`. We'll compare two models with different gamma values
+
+```{r}
+Mod7<-svm(Cat~.,data=SVMdat[Train,],kernel="radial",gamma=2,cost=1,decision.values=T)
+Mod8<-svm(Cat~.,data=SVMdat[Train,],kernel="radial",gamma=50,cost=1,decision.values=T)
+Fits7<-attributes(predict(Mod7,SVMdat[Train,],decision.values=T))$decision.values
+Fits8<-attributes(predict(Mod8,SVMdat[Train,],decision.values=T))$decision.values
+```
+
+```{r}
+par(mfrow=c(1,2))
+ROCplot(Fits7,SVMdat$Cat[Train],main="Training Data")
+ROCplot(Fits8,SVMdat$Cat[Train],add=T,col="red")
+```
+
+Plot ROC for validation dataset to compare to fitted data set:
+```{r}
+FitsVal1<-attributes(predict(Mod7,SVMdat[-Train,],decision.values=T))$decision.values
+FitsVal2<-attributes(predict(Mod8,SVMdat[-Train,],decision.values=T))$decision.values
+ROCplot(FitsVal1,SVMdat$Cat[-Train],main="Training Data")
+ROCplot(FitsVal2,SVMdat$Cat[-Train],add=T,col="red")
+```
+
+### SVM with >2 Classes
+
+We can fit more than two classes using the same `svm()` function.
+
+First, add a third category to the toy data:
+
+```{r}
+set.seed(1)
+NewDat<-data.frame(Cat=rep("C",50),Feat1=rnorm(50),Feat2=(rnorm(50)))
+SVMMdat<-rbind(SVMdat,NewDat)
+SVMMdat$Feat2[SVMMdat$Cat=="C"]<-SVMMdat$Feat2[SVMMdat$Cat=="C"]+2
+qplot(Feat1,Feat2,colour=Cat,data=SVMMdat)
+```
+
+now fit the model:
+
+```{r}
+Mod9<-svm(Cat~.,data=SVMMdat,kernel="radial",cost=10,gamma=1)
+plot(Mod9,SVMMdat)
+```
+
+# Gene Expression Example
+
+```{r}
+names(Khan)
+dim(Khan$xtrain)
+dim(Khan$xtest)
+length(Khan$ytrain)
+length(Khan$ytest)
+table(Khan$ytrain)
+table(Khan$ytest)
+```
+
+2,308 genes
+63 observations for the training dataset
+20 observations for the validation dataset
+
+Assignment:
+
+1. Fit the linear support vector (SVC), which is all we need given the large number of features (n=2,308)
+2. Create a table showing the classification rates (Predicted vs Actual) for the *training data*
+3. Generate a table showing the classification rates for the *test data* 
