@@ -1,0 +1,512 @@
+---
+title: "10 - Unsupervised Learning"
+author: "Jaimie Bortolotti"
+date: "March 28, 2019"
+output: html_document
+---
+Up until now, we've been given a set of $X$ values and response $Y$ values, and we have been building models using $X$ to predict $Y$ (=supervised learning). In unsupervised learning, we only have X values, and we are not concerned with prediction. Here, we want to explore the data - looking at subgroups, trends, and ways to visualize the data. 
+
+Unsupervised learning tends to be tricky as it is exploratory data analysis - there is no clearly outlined goal of analysis, and we cannot test our work like we have been using cross-validation to test the fit of our model (because here, there is no model).
+
+Ex. If you have assayed gene expression levels in cancer patients, you can look for subgroups or patterns within those genes which can potentially help you understand the disease better.
+
+There are two strategies: Principal Components Analysis and Clustering.
+
+# PRINCIPAL COMPONENTS ANALYSIS
+
+Principal components = when you have a large set of correlated variables, principal components are the subset of variables that explain the most variability within the data. 
+
+$p$ = # of features (variables)
+$n$ = observations
+
+Example: USArrests per 100,000 residents for each of three crimes: Assault, Murder, Rape. Also includes UrbanPop (% of population living in urban areas)
+
+$n=50$ (each state)
+$p=4$ (Assault, Murder, Rape, Urban Population)
+
+The n observations are in p-dimensional space, but not all the dimensions are helpful in representing the data.
+
+Ex. Movies are a 2D representation of 3D information - losing that 3rd dimension doesn't affect the story or how the information is portrayed.
+
+= dimension reduction
+
+```{r}
+USArrests
+```
+
+First principal component ($Z1$) = normalized linear combination of features $(X_1, X_2, .. X_p)$ that has the largest variance. 
+
+Second principal component ($Z2$) = combination of features that has next highest variance that is uncorrelated with $Z1$, etc...
+
+$z_{i1} = \phi_{11} x_{i1} + \phi_{21} x_{i2} + . . . + \phi_{p1}x{ip}$
+
+$\phi$ = loadings 
+
+Loading = weight that each feature has in explaining variance
+
+All the loadings combined = principle component loading vector - can plot on PCA graph, will show you relation to principal components, then you can compare observations to those trends.
+
+Length and direction of each PC (Z) is determined by extreme values. Observations (in this case, states) are scored based on how much they influence each PC. 
+
+Little influence = closer to 0 
+Big influence (extreme value) = large number (can be either sign)
+
+If we didn't scale these variables, the variables with the biggest mean and variance would dominate (unhelpful if your variables are in different units). Scale to mean = 0, SD = 1 (use scale=TRUE)
+
+```{r}
+apply(USArrests, 2, mean)
+
+#applies the function mean() to each column (2) of USArrests
+
+apply(USArrests, 2, var)
+```
+
+```{r}
+#can perform PCA with prcomp(), set scale = TRUE 
+
+pr.out<-prcomp(USArrests, scale=TRUE)
+names(pr.out)
+```
+
+Rotation = principal component loadings (each column contains loading vector) (for the features)
+x = principle component score vectors (for the observations)
+
+4 columns = 4 PCs bc p = 4
+```{r}
+pr.out$rotation
+
+pr.out$x
+```
+
+First principal component = linear combination of features 
+
+$Z_1 =  \phi_{11}X_1 + \phi_{21}X_2 + . . . + \phi_{p1}X_p$
+
+```{r}
+biplot(pr.out, scale=0)
+```
+
+```{r}
+#standard deviation
+pr.out$sdev
+
+#variance explained by each principal component
+pr.var<-pr.out$sdev^2
+
+#proportion of variance explained
+pve<-pr.var/sum(pr.var)
+pve
+```
+
+PC1 explains 62.0% of variance
+PC2 explains 24.7%
+PC3 explains 8.9%
+PC4 explains 4.3%
+
+So figure above visualizes ~85% of variation
+
+```{r}
+plot(pve, 
+     xlab="Principal Component", 
+     ylab="Proportion of Variance Explained",
+     ylim=c(0,1),
+     type="b")
+```
+
+Can plot this cumulatively as well:
+
+```{r}
+plot(cumsum(pve),
+     xlab="Principal Component",
+     ylab="Cumulative Proportion of Variance Explained",
+     ylim=c(0,1),
+     type="b")
+```
+At this point, you could plot the other principal components, but PC3 and PC4 explain so little of the variance (<15% combined) that the original plot of PC1 vs PC2 gives the best picture of the data. 
+
+## UMAP
+
+Used for non-linear dimension reduction (non-parametric data) - very useful when working with high-dimensional/complicated genetic data, etc.
+
+```{r}
+library(umap)
+```
+Separate data and labels
+
+```{r}
+iris.data<-iris[,grep("Sepal|Petal", colnames(iris))]
+iris.labels<-iris[,"Species"]
+```
+
+```{r}
+iris.umap<-umap(iris.data)
+iris.umap
+```
+
+Layout is a matrix of coordinates that correspond to the positions on the umap graph (scores, like above)
+
+```{r}
+head(iris.umap$layout)
+```
+
+
+```{r}
+#Fancy custom plot from https://cran.r-project.org/web/packages/umap/vignettes/umap.html
+
+plot.iris<-function(x, labels,
+                    main="A UMAP visualization of the Iris dataset",  
+                    pad=0.1, 
+                    cex=0.65, 
+                    pch=19, 
+                    add=FALSE, 
+                    legend.suffix="",
+                    cex.main=1, 
+                    cex.legend=1) {
+  
+ layout = x
+ if (class(x)=="umap") {
+   layout = x$layout
+   } 
+   
+ xylim = range(layout)
+ xylim = xylim + ((xylim[2]-xylim[1])*pad)*c(-0.5, 0.5)
+ 
+ if (!add) {
+     par(mar=c(0.2,0.7,1.2,0.7), ps=10)
+     plot(xylim, 
+          xylim, 
+          type="n", 
+          axes=F, 
+          frame=F)
+     rect(xylim[1], 
+          xylim[1], 
+          xylim[2], 
+          xylim[2], 
+          border="#aaaaaa", 
+          lwd=0.25)  
+   }
+   
+ points(layout[,1], 
+        layout[,2], 
+        col=as.integer(labels),
+        cex=cex, 
+        pch=pch)
+ mtext(side=3, 
+       main, 
+       cex=cex.main)
+ 
+   labels.u = unique(labels)
+   legend.pos = "bottomright"
+   legend.text = as.character(labels.u)
+   if (add) {
+     legend.pos = "bottomright"
+     legend.text = paste(as.character(labels.u), 
+                         legend.suffix)
+   }
+   
+   legend(legend.pos, 
+          legend=legend.text,
+          col=as.integer(labels.u),
+          bty="n", 
+          pch=pch, 
+          cex=cex.legend)
+ }
+
+```
+
+
+```{r}
+plot.iris(iris.umap, iris.labels)
+```
+
+Most of the variation in the data can be explained by species, as there is distinct clustering.
+
+# CLUSTERING
+
+Clustering refers to finding subgroups within a dataset. 
+
+Ex. n observations with p features. 
+
+$n$ observations = tissue samples from breast cancer patients 
+$p$ features = measurements from each tissue sample (tumor stage, etc.)
+
+Are there different subtypes of breast cancer that we don't know about? 
+
+*PCA* looks to find low-dimensional representation of observations that explains high fraction of variance
+
+*Clustering* looks to find homogeneous subgroups among observations
+
+Two clustering approaches: K-means and hierarchal
+
+
+## K-means Clustering
+
+Goal: Partition the observations into pre-specified number of clusters.
+
+Use K-Means algorithm: provides an optimum number of clusters.
+
+1. Randomly assign a number from 1 to K (K = # of clusters) to each observation. These are initial cluster assignments.
+
+2. Iterate until the cluster assignments stop changing. 
+a) For each of the K clusters, compute centroid (vector of the p feature means for the observations in the kth cluster). 
+b) Assign each observation to the cluster whose centroid is closest (Euclidean distance).
+
+You want to minimize variation in the cluster. Obviously, you could have K = n, with a variation of 0, but eventually the reduction in variation with increasing K will start to slow down, so pick the elbow. 
+
+```{r}
+#create data set with 2 clusters
+
+set.seed(2)
+x=matrix(rnorm(50*2), ncol=2)
+x[1:25,1]=x[1:25,1]+3
+x[1:25,2]=x[1:25,2]-4
+```
+
+Perform K-means clustering with K=2
+
+```{r}
+#use kmeans()
+#nstart = #of iterations
+
+km.out=kmeans(x,2,nstart=20)
+km.out$cluster
+```
+
+*nstart* = used to run algorithm a bunch of times (here = 20); kmeans will only report best results (lowest sum of squares)
+
+```{r}
+plot(x, 
+     col=(km.out$cluster+1), 
+     main="K-Means Clustering Results with K=2",
+     xlab="",
+     ylab="",
+     pch=20,
+     cex=2)
+```
+
+For this example we knew there were 2 clusters, but in real data you wouldn't - let's try this with K = 3.
+
+```{r}
+set.seed(4)
+km.out=kmeans(x,3,nstart=20)
+km.out
+```
+
+```{r}
+plot(x, 
+     col=(km.out$cluster+1), 
+     main="K-Means Clustering Results with K=3", 
+     xlab ="", 
+     ylab="", 
+     pch =20, 
+     cex =2)
+```
+
+
+
+## Hierarchical Clustering
+
+Use this when you don't know how many clusters you want. This is a bottom-up approach.
+
+```{r}
+#use hclist(), specify strategy
+#using random data from above
+
+hc.complete<-hclust(dist(x), method="complete")
+hc.average<-hclust(dist(x), method="average")
+hc.single<-hclust(dist(x), method="single")
+```
+
+Three strategies for clustering:
+
+Complete linkage clustering - merge clusters with smallest maximum pairwise distance (conservative)
+
+Single linkage clustering - merge clusters with smallest minimum pairwise distance
+
+Average linkage clustering - compromise between both
+
+
+Plot dendrograms:
+
+```{r}
+plot(hc.complete,
+     main="Complete Linkage",
+     xlab="",
+     sub="",
+     cex=0.9)
+
+plot(hc.average,
+     main="Average Linkage",
+     xlab="",
+     sub="",
+     cex=0.9)
+
+plot(hc.single,
+     main="Single Linkage",
+     xlab="",
+     sub="",
+     cex=0.9)
+```
+cutree() = determines cluster labels (how many clusters you want to cut the data into)
+
+```{r}
+cutree(hc.complete, 2)
+cutree(hc.average, 2)
+cutree(hc.single, 2)
+```
+
+Complete and average are pretty good at clustering - cuts the data more or less correctly into two clusters (which is what we designed the data to do). Single, on the other hand, identifies basically one big cluster with a lone data point in cluster 2. 
+
+Try with different cluster value:
+
+```{r}
+cutree(hc.single, 3)
+```
+
+Still 2 lone clusters. 
+
+### GENETIC EXAMPLE
+
+6830 gene expression measurements (columns) on 64 cancer cell lines (rows)
+
+```{r}
+library(ISLR)
+ncilabs<-NCI60$labs
+ncidat<-NCI60$data
+```
+
+```{r}
+#look at types of cancer for the cell lines
+
+table(ncilabs)
+```
+
+PCA
+
+```{r}
+pr.out=prcomp(ncidat, scale=TRUE)
+
+#colour code cancer types
+
+Cols=function(vec){
+  cols=rainbow(length(unique(vec)))
+  return(cols[as.numeric(as.factor(vec))])
+}
+```
+
+Plot 3 best principal components
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(pr.out$x[,1:2], 
+     col=Cols(ncilabs), 
+     pch=19, 
+     xlab="Z1", 
+     ylab="Z2")
+
+plot(pr.out$x[,c(1,3)], 
+     col=Cols(ncilabs),
+     pch=19,
+     xlab="Z1",
+     ylab="Z3")
+```
+
+Overall, cancer types tend to cluster together, suggesting that cell lines from the same cancer type have similar gene expression levels.
+
+PVE
+
+```{r}
+summary(pr.out)
+
+pve=100*pr.out$sdev^2/sum(pr.out$sdev^2)
+```
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(pve,
+     type="o",
+     ylab="PVE",
+     xlab="Principal Component",
+     col="blue")
+
+plot(cumsum(pve),
+     type="o",
+     ylab="Cumulative PVE",
+     xlab="Principal Component",
+     col="brown3")
+```
+The first 7 PCs explain about 40% of the variance, and an elbow afterwards (diminishing returns)
+
+From here, we want to hierarchially cluster the cell lines - do the observations cluster into distinct types of cancer?
+
+Standardize data first:
+
+```{r}
+sd.data=scale(ncidat)
+```
+
+```{r}
+data.dist=dist(sd.data)
+
+plot(hclust(data.dist), #defaults to complete
+     labels=ncilabs, 
+     main="Complete Linkage", 
+     xlab ="", 
+     sub ="", 
+     ylab ="")
+
+plot(hclust(data.dist, method ="average"), 
+     labels=ncilabs, 
+     main="Average Linkage", 
+     xlab ="", 
+     sub ="", 
+     ylab ="")
+
+plot(hclust(data.dist, method ="single"), 
+     labels =ncilabs, 
+     main="Single Linkage", 
+     xlab="", 
+     sub ="", 
+     ylab ="")
+```
+
+Pretty good clustering but not perfect. Let's try cutting the dendrogram at a height that will yield 4 clusters:
+
+```{r}
+hc.out<-hclust(dist(sd.data)) #categorizes clusters
+
+hc.clusters<-cutree(hc.out, 4) 
+
+table(hc.clusters, ncilabs)
+```
+Patterns: most cell lines are grouped in one cluster (leukemia, ovarian, melanoma...), but some spread out (breast, colon...)
+
+```{r}
+par(mfrow = c(1,1))
+plot(hc.out, labels = ncilabs)
+abline(h = 139, col ="red") #this is where you can cut it into 4 clusters
+```
+
+Try with K-means clustering with K=4 and compare
+```{r}
+set.seed(2)
+km.out<-kmeans(sd.data, 4, nstart=20)
+km.clusters<-km.out$cluster
+table(km.clusters, hc.clusters)
+```
+
+These clusters are different: C2 in K-means is the same as C3 in Hierarchal, but C4 in K-means contains some C1 from Hierarchal and all of C2...
+
+Sometimes performing HC on first couple PCs yields better results as it reduces noise in the data
+
+```{r}
+hc.out<-hclust(dist(pr.out$x[,1:5]))
+
+plot(hc.out, labels=ncilabs, 
+     main="Hier. Clust on 1st 5 Score Vectors")
+
+table(cutree(hc.out, 4), ncilabs)
+```
+Different again...looks like better clustering
