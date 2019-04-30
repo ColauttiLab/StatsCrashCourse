@@ -66,6 +66,10 @@ Machine learning algorithms for classification from linear predictors
 
 ## 8. Clustering Methods (Jaimie)
 
+Principal Components Analysis, K-means & hierarchichal clustering
+
+[8_Tutorial_Unsupervised_Learning.html](8_Tutorial_Unsupervised_Learning.html)
+
 
 
 
